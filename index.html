@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Kancelaria — Zadania i Czynności</title>
 <meta name="theme-color" content="#1f2d4d">
 <link rel="manifest" href="manifest.json">
@@ -35,6 +35,10 @@
 }
 *{box-sizing:border-box;}
 html,body{height:100%;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden;}
+body{overflow-x:hidden;touch-action:manipulation;width:100%;}
+/* pasek pod paskiem statusu iPhone'a (apka na pełnym ekranie) */
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--navy);z-index:300;pointer-events:none;}
 body{
   margin:0;
   background:var(--paper);
@@ -503,14 +507,17 @@ table.rp th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:va
 table.rp td.r,table.rp th.r{text-align:right;white-space:nowrap;}
 details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bottom:10px;}
 @media (max-width:780px){
-  #timer-chip{top:auto;bottom:140px;right:14px;}
+  #timer-chip{top:auto;bottom:calc(140px + env(safe-area-inset-bottom,0px));right:14px;}
 }
 
 /* mobile bottom nav */
 .mobile-nav{display:none;}
 @media (max-width: 780px){
   nav.side{display:none;}
-  main{padding:20px 16px 90px;max-width:100%;}
+  main{padding:calc(20px + env(safe-area-inset-top,0px)) 16px 90px;max-width:100%;}
+  input,select,textarea{font-size:16px;}
+  .modal-overlay{padding-top:calc(24px + env(safe-area-inset-top,0px));}
+  .login-card{max-height:100%;overflow-y:auto;}
   .mobile-nav{
     display:flex;
     position:fixed;bottom:0;left:0;right:0;
@@ -607,7 +614,6 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
               <option value="wazne_pilne">Ważne / pilne</option>
               <option value="do_napisania">Do napisania</option>
               <option value="drobne">Drobne (telefony itp.)</option>
-              <option value="do_zlecenia">Do zlecenia pracownikowi</option>
               <option value="notatka">Notatka</option>
             </select>
           </div>
@@ -1181,10 +1187,11 @@ const KATEGORIE_LABELS = {
   wazne_pilne: 'Ważne / pilne',
   do_napisania: 'Do napisania',
   drobne: 'Drobne',
-  do_zlecenia: 'Do zlecenia pracownikowi',
   notatka: 'Notatki'
 };
-const KATEGORIE_ORDER = ['wazne_pilne','do_napisania','drobne','do_zlecenia','notatka'];
+const KATEGORIE_ORDER = ['wazne_pilne','do_napisania','drobne','notatka'];
+// dawne zadania „do zlecenia pracownikowi” traktujemy jako drobne
+const normKat = k => KATEGORIE_ORDER.includes(k) ? k : 'drobne';
 
 let editingTaskId = null;
 let tfSelectedCaseId = null;
@@ -1212,7 +1219,7 @@ function editTask(id){
   tfSelectedCaseId = t.sprawaId || null;
   document.getElementById('task-form-title').textContent = 'Edytuj zadanie';
   document.getElementById('tf-tresc').value = t.tresc || '';
-  document.getElementById('tf-kategoria').value = t.kategoria || 'wazne_pilne';
+  document.getElementById('tf-kategoria').value = normKat(t.kategoria || 'wazne_pilne');
   document.getElementById('tf-priorytet').value = t.priorytet || 'sredni';
   document.getElementById('tf-termin').value = t.termin || '';
   renderTfSelectedCase();
@@ -1276,7 +1283,7 @@ function renderTaskGroups(){
     container.appendChild(g);
   }
   KATEGORIE_ORDER.forEach(kat=>{
-    const items = active.filter(t=>t.kategoria===kat && !soonIds.has(t.id))
+    const items = active.filter(t=>normKat(t.kategoria)===kat && !soonIds.has(t.id))
       .sort((a,b)=>prioRank(b.priorytet)-prioRank(a.priorytet) || a.utworzono-b.utworzono);
     const group = document.createElement('div');
     group.className = 'task-group';
