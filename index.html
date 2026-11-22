@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kancelaria — Zadania i Czynności</title>
-<meta name="theme-color" content="#232320">
+<meta name="theme-color" content="#1f2d4d">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,6 +20,8 @@
   --paper:#f6f4ef;
   --paper-raised:#fffdf9;
   --ink:#242220;
+  --navy:#1f2d4d;
+  --navy-soft:#a9b4cc;
   --ink-soft:#5c584f;
   --line:#e2ddd1;
   --burgundy:#7d2a2a;
@@ -52,7 +54,7 @@ h1,h2,h3,.serif{font-family:'Source Serif 4',serif;}
 nav.side{
   width:220px;
   flex-shrink:0;
-  background:var(--ink);
+  background:var(--navy);
   color:#e9e6de;
   display:flex;
   flex-direction:column;
@@ -72,7 +74,7 @@ nav.side .brand small{
   font-family:'Inter',sans-serif;
   font-weight:400;
   font-size:11px;
-  color:#a39d8d;
+  color:var(--navy-soft);
   margin-top:4px;
   letter-spacing:.5px;
   text-transform:uppercase;
@@ -82,7 +84,7 @@ nav.side button{
   cursor:pointer;
   padding:13px 24px;
   font-size:14.5px;
-  color:#c9c4b6;
+  color:#c3cbe0;
   border-left:3px solid transparent;
   display:flex;
   align-items:center;
@@ -99,7 +101,7 @@ nav.side .spacer{flex:1;}
 nav.side .sync-status{
   padding:0 24px;
   font-size:11px;
-  color:#8f8a7c;
+  color:var(--navy-soft);
   display:flex;
   align-items:center;
   gap:6px;
@@ -446,6 +448,23 @@ label{
 .act-entry .a-desc{font-size:14px;}
 .act-entry .a-case{font-size:12px;color:var(--ink-soft);margin-top:2px;}
 
+.login-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:var(--navy);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.login-overlay.active{display:flex;}
+.login-card{
+  background:var(--paper-raised);border-radius:14px;padding:32px 28px;
+  width:100%;max-width:380px;box-shadow:0 10px 40px rgba(0,0,0,.35);
+}
+.login-card h1{margin:0 0 4px;font-size:24px;}
+.login-card .sub{color:var(--ink-soft);font-size:13px;margin-bottom:22px;}
+.login-err{color:var(--burgundy);font-size:13px;min-height:18px;margin:6px 0 10px;}
+.login-link{background:none;border:0;padding:0;color:var(--ink-soft);font-size:12.5px;text-decoration:underline;cursor:pointer;margin-top:14px;}
+nav.side .logout-btn{margin-top:10px;font-size:12.5px;color:var(--navy-soft);}
+body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !important;}
+
 /* mobile bottom nav */
 .mobile-nav{display:none;}
 @media (max-width: 780px){
@@ -454,14 +473,14 @@ label{
   .mobile-nav{
     display:flex;
     position:fixed;bottom:0;left:0;right:0;
-    background:var(--ink);
+    background:var(--navy);
     padding:8px 8px calc(8px + env(safe-area-inset-bottom));
     z-index:40;
     justify-content:space-around;
   }
   .mobile-nav button{
     all:unset;cursor:pointer;
-    color:#a39d8d;
+    color:var(--navy-soft);
     font-size:11px;
     display:flex;flex-direction:column;
     align-items:center;gap:3px;
@@ -499,15 +518,29 @@ label{
 </head>
 <body>
 
+<div class="login-overlay" id="login-overlay">
+  <form class="login-card" onsubmit="doLogin(event)">
+    <h1>Kancelaria</h1>
+    <div class="sub">Zaloguj się, aby zobaczyć sprawy i klientów</div>
+    <div class="field"><label>E-mail</label><input id="lg-email" type="email" autocomplete="username" required></div>
+    <div class="field"><label>Hasło</label><input id="lg-pass" type="password" autocomplete="current-password" required></div>
+    <div class="login-err" id="lg-err"></div>
+    <button class="primary" type="submit" id="lg-btn" style="width:100%;">Zaloguj</button>
+    <div style="text-align:center;"><button type="button" class="login-link" onclick="resetPassword()">Nie pamiętam hasła</button></div>
+  </form>
+</div>
+
 <div id="app">
   <nav class="side">
     <div class="brand">Kancelaria<small>Zadania i czynności</small></div>
     <button data-view="zadania" class="nav-btn active"><span>Zadania</span></button>
+    <button data-view="klienci" class="nav-btn"><span>Klienci</span></button>
     <button data-view="sprawy" class="nav-btn"><span>Sprawy</span></button>
     <button data-view="czynnosci" class="nav-btn"><span>Czynności</span></button>
     <button data-view="archiwum" class="nav-btn"><span>Archiwum</span></button>
     <div class="spacer"></div>
     <div class="sync-status"><span class="dot off" id="sync-dot"></span><span id="sync-text">łączenie…</span></div>
+    <button class="logout-btn" onclick="doLogout()"><span>Wyloguj</span></button>
   </nav>
 
   <main>
@@ -560,6 +593,93 @@ label{
       <div class="task-groups" id="task-groups"></div>
     </section>
 
+    <!-- KLIENCI -->
+    <section class="view" id="view-klienci">
+      <div class="view-header">
+        <div><h1>Klienci</h1><div class="sub">Karty klientów — dane kontaktowe, identyfikacyjne i pełnomocnictwa</div></div>
+        <button class="primary" onclick="openClientForm()">+ Nowy klient</button>
+      </div>
+
+      <div class="panel form-panel" id="client-form-panel" style="display:none;">
+        <h3 id="client-form-title">Nowy klient</h3>
+        <div class="grid2">
+          <div class="field"><label>Rodzaj klienta</label>
+            <select id="cl-typ" onchange="toggleClientType()">
+              <option value="osoba">Osoba fizyczna</option>
+              <option value="dzialalnosc">Osoba fizyczna prowadząca działalność</option>
+              <option value="firma">Firma / osoba prawna</option>
+            </select>
+          </div>
+          <div class="field"><label>Status</label>
+            <select id="cl-status">
+              <option value="aktywny">Aktywny</option>
+              <option value="archiwum">Archiwum</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label id="cl-nazwa-label">Imię i nazwisko</label><input id="cl-nazwa" placeholder="Imię i nazwisko"></div>
+
+        <div class="section-label" style="margin:18px 0 10px;">Dane identyfikacyjne</div>
+        <div class="grid2">
+          <div class="field cl-osoba"><label>PESEL</label><input id="cl-pesel" inputmode="numeric" maxlength="11" placeholder="11 cyfr"></div>
+          <div class="field cl-osoba"><label>Data urodzenia</label><input id="cl-urodzenia" type="date"></div>
+          <div class="field cl-firma"><label>NIP</label><input id="cl-nip" placeholder="np. 777 000 00 00"></div>
+          <div class="field cl-firma"><label>REGON</label><input id="cl-regon"></div>
+          <div class="field cl-firma"><label>KRS / CEIDG</label><input id="cl-krs"></div>
+          <div class="field cl-firma"><label>Reprezentacja</label><input id="cl-reprezentacja" placeholder="np. prezes zarządu Jan Kowalski"></div>
+        </div>
+
+        <div class="section-label" style="margin:18px 0 10px;">Kontakt i adresy</div>
+        <div class="field"><label id="cl-adres-label">Adres zamieszkania</label><input id="cl-adres" placeholder="Ulica, nr, kod, miejscowość"></div>
+        <div class="field"><label>Adres do korespondencji (jeśli inny)</label><input id="cl-adres-kor"></div>
+        <div class="grid2">
+          <div class="field"><label>Telefon</label><input id="cl-telefon" placeholder="np. 600 000 000"></div>
+          <div class="field"><label>E-mail</label><input id="cl-email" type="email" placeholder="adres@email.pl"></div>
+        </div>
+        <div class="field cl-firma"><label>Osoba do kontaktu</label><input id="cl-kontakt" placeholder="Imię, nazwisko, stanowisko, telefon"></div>
+        <div class="field"><label>Preferowana forma kontaktu</label>
+          <select id="cl-forma">
+            <option value="">— bez preferencji —</option>
+            <option value="telefon">Telefon</option>
+            <option value="email">E-mail</option>
+            <option value="sms">SMS</option>
+            <option value="poczta">Poczta tradycyjna</option>
+          </select>
+        </div>
+
+        <div class="section-label" style="margin:18px 0 10px;">Współpraca</div>
+        <div class="grid2">
+          <div class="field"><label>Data nawiązania współpracy</label><input id="cl-wspolpraca" type="date"></div>
+          <div class="field"><label>Domyślna stawka godzinowa (zł/h)</label><input id="cl-stawka" type="number" min="0" step="1" placeholder="np. 300"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Pełnomocnictwo — data udzielenia</label><input id="cl-pelnom-data" type="date"></div>
+          <div class="field"><label>Pełnomocnictwo — zakres</label><input id="cl-pelnom-zakres" placeholder="np. ogólne / do sprawy sygn. …"></div>
+        </div>
+        <div class="field"><label>Źródło polecenia</label><input id="cl-zrodlo" placeholder="np. polecenie, strona www"></div>
+        <div class="field">
+          <label>Pola dodatkowe</label>
+          <div id="cl-extra"></div>
+          <button class="ghost" type="button" onclick="addClientExtraRow()">+ Dodaj pole</button>
+        </div>
+        <div class="field"><label>Notatki</label><textarea id="cl-notatka" rows="3" placeholder="Ustalenia, uwagi, preferencje klienta…"></textarea></div>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <button class="primary" onclick="saveClient()">Zapisz</button>
+          <button class="ghost" onclick="closeClientForm()">Anuluj</button>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input type="text" id="client-search" placeholder="Szukaj klienta (nazwa, PESEL, NIP, telefon, e-mail)…" oninput="renderClients()">
+        <select id="client-status-filter" onchange="renderClients()" style="width:auto;">
+          <option value="aktywny">Aktywni</option>
+          <option value="archiwum">Archiwum</option>
+          <option value="wszyscy">Wszyscy</option>
+        </select>
+      </div>
+      <div class="case-list" id="client-list"></div>
+    </section>
+
     <!-- SPRAWY -->
     <section class="view" id="view-sprawy">
       <div class="view-header">
@@ -584,7 +704,10 @@ label{
           </div>
         </div>
         <div class="grid2">
-          <div class="field"><label>Klient</label><input id="cf-klient" placeholder="Imię i nazwisko / firma"></div>
+          <div class="field"><label>Klient</label>
+            <select id="cf-klient-id" onchange="onCaseClientPick()" style="margin-bottom:6px;"><option value="">— wybierz z bazy klientów —</option></select>
+            <input id="cf-klient" placeholder="Imię i nazwisko / firma (lub wpisz ręcznie)">
+          </div>
           <div class="field"><label>Przeciwnik</label><input id="cf-przeciwnik" placeholder="Strona przeciwna"></div>
         </div>
         <div class="grid2">
@@ -660,6 +783,7 @@ label{
     <section class="view" id="view-archiwum">
       <div class="view-header">
         <div><h1>Archiwum</h1><div class="sub">Zrobione zadania</div></div>
+        <button class="ghost" onclick="doLogout()">Wyloguj</button>
       </div>
       <div class="task-groups" id="archive-groups"></div>
     </section>
@@ -668,12 +792,26 @@ label{
 
 <div class="mobile-nav">
   <button data-view="zadania" class="mnav-btn active"><span class="ic">☐</span>Zadania</button>
+  <button data-view="klienci" class="mnav-btn"><span class="ic">☻</span>Klienci</button>
   <button data-view="sprawy" class="mnav-btn"><span class="ic">▤</span>Sprawy</button>
   <button data-view="czynnosci" class="mnav-btn"><span class="ic">✎</span>Czynności</button>
   <button data-view="archiwum" class="mnav-btn"><span class="ic">▦</span>Archiwum</button>
 </div>
 
 <button class="fab" id="fab-btn">+</button>
+
+<!-- Client detail modal -->
+<div class="modal-overlay" id="client-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeClientModal()">×</button>
+    <h2 id="clm-nazwa"></h2>
+    <div class="modal-meta" id="clm-meta"></div>
+    <div id="clm-details"></div>
+    <div class="divider"></div>
+    <div class="section-label">Sprawy klienta</div>
+    <div id="clm-cases"></div>
+  </div>
+</div>
 
 <!-- Case detail modal -->
 <div class="modal-overlay" id="case-modal">
@@ -700,6 +838,7 @@ label{
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
 /* =========================================================
@@ -717,10 +856,12 @@ const firebaseConfig = {
 };
 
 let db = null;
+let auth = null;
 let firestoreReady = false;
 try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
+  auth = firebase.auth();
   firestoreReady = true;
 }catch(e){
   console.warn("Firebase init failed, working in local-only mode.", e);
@@ -730,21 +871,24 @@ try{
    STATE
    ========================================================= */
 let sprawy = [];
+let klienci = [];
 let zadania = [];
 let czynnosci = [];
 let activeCaseId = null; // for the linking autocompletes
 
-const LS_KEYS = { sprawy:'k_sprawy', zadania:'k_zadania', czynnosci:'k_czynnosci' };
+const LS_KEYS = { klienci:'k_klienci', sprawy:'k_sprawy', zadania:'k_zadania', czynnosci:'k_czynnosci' };
 
 function loadLocal(){
   try{
     sprawy = JSON.parse(localStorage.getItem(LS_KEYS.sprawy) || '[]');
+    klienci = JSON.parse(localStorage.getItem(LS_KEYS.klienci) || '[]');
     zadania = JSON.parse(localStorage.getItem(LS_KEYS.zadania) || '[]');
     czynnosci = JSON.parse(localStorage.getItem(LS_KEYS.czynnosci) || '[]');
   }catch(e){}
 }
 function saveLocal(){
   localStorage.setItem(LS_KEYS.sprawy, JSON.stringify(sprawy));
+  localStorage.setItem(LS_KEYS.klienci, JSON.stringify(klienci));
   localStorage.setItem(LS_KEYS.zadania, JSON.stringify(zadania));
   localStorage.setItem(LS_KEYS.czynnosci, JSON.stringify(czynnosci));
 }
@@ -761,22 +905,95 @@ function setSyncStatus(connected){
   }
 }
 
+let unsubs = [];
 function initFirestoreListeners(){
   if(!firestoreReady){ setSyncStatus(false); return; }
-  db.collection('sprawy').onSnapshot(snap=>{
-    sprawy = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    saveLocal(); renderAll(); setSyncStatus(true);
-  }, err=>{ console.error(err); setSyncStatus(false); });
+  stopFirestoreListeners();
+  const bind = (col, setter)=>{
+    unsubs.push(db.collection(col).onSnapshot(snap=>{
+      setter(snap.docs.map(d=>({id:d.id, ...d.data()})));
+      saveLocal(); renderAll(); setSyncStatus(true);
+    }, err=>{ console.error(err); setSyncStatus(false); }));
+  };
+  bind('sprawy', v=>{ sprawy = v; });
+  bind('klienci', v=>{ klienci = v; });
+  bind('zadania', v=>{ zadania = v; });
+  bind('czynnosci', v=>{ czynnosci = v; });
+}
+function stopFirestoreListeners(){
+  unsubs.forEach(u=>{ try{u();}catch(e){} });
+  unsubs = [];
+}
 
-  db.collection('zadania').onSnapshot(snap=>{
-    zadania = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    saveLocal(); renderAll(); setSyncStatus(true);
-  }, err=>{ console.error(err); setSyncStatus(false); });
-
-  db.collection('czynnosci').onSnapshot(snap=>{
-    czynnosci = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    saveLocal(); renderAll(); setSyncStatus(true);
-  }, err=>{ console.error(err); setSyncStatus(false); });
+/* =========================================================
+   LOGOWANIE
+   ========================================================= */
+function showLogin(show){
+  document.getElementById('login-overlay').classList.toggle('active', show);
+  document.body.classList.toggle('locked', show);
+}
+const AUTH_ERRORS = {
+  'auth/invalid-credential':'Nieprawidłowy e-mail lub hasło.',
+  'auth/wrong-password':'Nieprawidłowy e-mail lub hasło.',
+  'auth/user-not-found':'Nieprawidłowy e-mail lub hasło.',
+  'auth/invalid-email':'Nieprawidłowy adres e-mail.',
+  'auth/too-many-requests':'Zbyt wiele prób. Spróbuj za kilka minut.',
+  'auth/network-request-failed':'Brak połączenia z internetem.',
+  'auth/operation-not-allowed':'Logowanie e-mailem nie jest włączone w Firebase.'
+};
+async function doLogin(e){
+  e.preventDefault();
+  const btn = document.getElementById('lg-btn');
+  const err = document.getElementById('lg-err');
+  err.textContent = ''; btn.disabled = true;
+  try{
+    await auth.signInWithEmailAndPassword(
+      document.getElementById('lg-email').value.trim(),
+      document.getElementById('lg-pass').value);
+    document.getElementById('lg-pass').value = '';
+  }catch(ex){
+    err.textContent = AUTH_ERRORS[ex.code] || ('Błąd logowania: ' + (ex.code||ex.message));
+  }
+  btn.disabled = false;
+}
+async function resetPassword(){
+  const email = document.getElementById('lg-email').value.trim();
+  const err = document.getElementById('lg-err');
+  if(!email){ err.textContent = 'Wpisz najpierw swój e-mail, a potem kliknij „Nie pamiętam hasła".'; return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    err.style.color = 'var(--sage)';
+    err.textContent = 'Wysłano wiadomość z linkiem do zmiany hasła.';
+    setTimeout(()=>{ err.style.color=''; }, 6000);
+  }catch(ex){ err.textContent = AUTH_ERRORS[ex.code] || 'Nie udało się wysłać wiadomości.'; }
+}
+async function doLogout(){
+  if(!confirm('Wylogować z aplikacji?')) return;
+  await auth.signOut();
+}
+function wipeLocalData(){
+  stopFirestoreListeners();
+  sprawy = []; klienci = []; zadania = []; czynnosci = [];
+  Object.values(LS_KEYS).forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
+}
+function startAuth(){
+  if(!firestoreReady || !auth){
+    // brak Firebase: tryb lokalny bez logowania
+    loadLocal(); renderAll(); setSyncStatus(false); return;
+  }
+  showLogin(true); // do czasu rozstrzygnięcia stanu logowania nic nie pokazujemy
+  auth.onAuthStateChanged(user=>{
+    if(user){
+      showLogin(false);
+      loadLocal(); renderAll();
+      initFirestoreListeners();
+    }else{
+      wipeLocalData();
+      renderAll();
+      setSyncStatus(false);
+      showLogin(true);
+    }
+  });
 }
 
 function uid(){ return 'id_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
@@ -796,6 +1013,7 @@ document.querySelectorAll('.nav-btn, .mnav-btn').forEach(btn=>{
 document.getElementById('fab-btn').addEventListener('click', ()=>{
   const activeView = document.querySelector('.view.active').id;
   if(activeView === 'view-zadania') openTaskForm();
+  else if(activeView === 'view-klienci') openClientForm();
   else if(activeView === 'view-sprawy') openCaseForm();
   else if(activeView === 'view-czynnosci') document.getElementById('af-opis').focus();
 });
@@ -942,6 +1160,206 @@ document.getElementById('tf-sprawa-search').addEventListener('input', e=>{
 });
 
 /* =========================================================
+   KLIENCI (clients)
+   ========================================================= */
+let editingClientId = null;
+const TYP_LABELS = {osoba:'Osoba fizyczna', dzialalnosc:'Działalność gospodarcza', firma:'Firma'};
+const FORMA_LABELS = {telefon:'Telefon', email:'E-mail', sms:'SMS', poczta:'Poczta tradycyjna'};
+
+function toggleClientType(){
+  const t = document.getElementById('cl-typ').value;
+  const firm = (t==='firma' || t==='dzialalnosc');
+  document.querySelectorAll('.cl-osoba').forEach(e=>e.style.display = (t==='firma') ? 'none' : '');
+  document.querySelectorAll('.cl-firma').forEach(e=>e.style.display = firm ? '' : 'none');
+  // kontakt/reprezentacja tylko dla osoby prawnej
+  ['cl-reprezentacja','cl-kontakt'].forEach(id=>{
+    const el = document.getElementById(id).closest('.field');
+    el.style.display = (t==='firma') ? '' : 'none';
+  });
+  document.getElementById('cl-nazwa-label').textContent = t==='firma' ? 'Nazwa firmy' : 'Imię i nazwisko';
+  document.getElementById('cl-nazwa').placeholder = t==='firma' ? 'Pełna nazwa firmy' : 'Imię i nazwisko';
+  document.getElementById('cl-adres-label').textContent = t==='firma' ? 'Siedziba' : (t==='dzialalnosc' ? 'Adres zamieszkania / siedziba' : 'Adres zamieszkania');
+}
+const CL_FIELDS = {
+  'cl-typ':'typ','cl-status':'status','cl-nazwa':'nazwa','cl-pesel':'pesel','cl-urodzenia':'urodzenia',
+  'cl-nip':'nip','cl-regon':'regon','cl-krs':'krs','cl-reprezentacja':'reprezentacja',
+  'cl-adres':'adres','cl-adres-kor':'adresKor','cl-telefon':'telefon','cl-email':'email','cl-kontakt':'kontakt',
+  'cl-forma':'forma','cl-wspolpraca':'wspolpraca','cl-pelnom-data':'pelnomData','cl-pelnom-zakres':'pelnomZakres',
+  'cl-zrodlo':'zrodlo','cl-notatka':'notatka'
+};
+function addClientExtraRow(k, v){
+  const row = document.createElement('div');
+  row.className = 'grid2 extra-row';
+  row.style.marginBottom = '8px';
+  row.innerHTML = `<input class="ex-k" placeholder="Nazwa pola"><input class="ex-v" placeholder="Wartość">`;
+  row.querySelector('.ex-k').value = k || '';
+  row.querySelector('.ex-v').value = v || '';
+  document.getElementById('cl-extra').appendChild(row);
+}
+function readClientExtraRows(){
+  return [...document.querySelectorAll('#cl-extra .extra-row')]
+    .map(r=>({k:r.querySelector('.ex-k').value.trim(), v:r.querySelector('.ex-v').value.trim()}))
+    .filter(x=>x.k || x.v);
+}
+function openClientForm(){
+  editingClientId = null;
+  document.getElementById('client-form-title').textContent = 'Nowy klient';
+  Object.keys(CL_FIELDS).forEach(id=>{ document.getElementById(id).value = ''; });
+  document.getElementById('cl-typ').value = 'osoba';
+  document.getElementById('cl-status').value = 'aktywny';
+  document.getElementById('cl-wspolpraca').value = new Date().toISOString().slice(0,10);
+  document.getElementById('cl-stawka').value = '';
+  document.getElementById('cl-extra').innerHTML = '';
+  toggleClientType();
+  switchView('klienci');
+  document.getElementById('client-form-panel').style.display = 'block';
+  document.getElementById('cl-nazwa').focus();
+}
+function closeClientForm(){ document.getElementById('client-form-panel').style.display = 'none'; }
+function editClient(id){
+  const c = klienci.find(x=>x.id===id);
+  if(!c) return;
+  closeClientModal();
+  editingClientId = id;
+  document.getElementById('client-form-title').textContent = 'Edytuj klienta';
+  Object.entries(CL_FIELDS).forEach(([el,key])=>{ document.getElementById(el).value = c[key] || ''; });
+  if(!c.typ) document.getElementById('cl-typ').value = 'osoba';
+  if(!c.status) document.getElementById('cl-status').value = 'aktywny';
+  document.getElementById('cl-stawka').value = (c.stawka===undefined||c.stawka===null) ? '' : c.stawka;
+  document.getElementById('cl-extra').innerHTML = '';
+  (c.pola||[]).forEach(p=>addClientExtraRow(p.k,p.v));
+  toggleClientType();
+  switchView('klienci');
+  document.getElementById('client-form-panel').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+async function saveClient(){
+  const nazwa = document.getElementById('cl-nazwa').value.trim();
+  if(!nazwa){ alert('Podaj imię i nazwisko lub nazwę klienta.'); return; }
+  const pesel = document.getElementById('cl-pesel').value.replace(/\s/g,'');
+  if(pesel && !/^\d{11}$/.test(pesel)){ alert('PESEL powinien mieć 11 cyfr.'); return; }
+  const payload = {};
+  Object.entries(CL_FIELDS).forEach(([el,key])=>{ payload[key] = document.getElementById(el).value.trim(); });
+  payload.pesel = pesel;
+  const st = document.getElementById('cl-stawka').value;
+  payload.stawka = st === '' ? null : Number(st);
+  payload.pola = readClientExtraRows();
+  const old = editingClientId ? (klienci.find(x=>x.id===editingClientId)||{}) : {};
+  payload.utworzono = old.utworzono || Date.now();
+  const id = editingClientId || uid();
+  await upsertDoc('klienci', id, payload);
+  // synchronizacja nazwy klienta w powiązanych sprawach
+  if(editingClientId && old.nazwa !== nazwa){
+    for(const s of sprawy.filter(x=>x.klientId===id)){
+      await upsertDoc('sprawy', s.id, {klient: nazwa});
+    }
+  }
+  closeClientForm();
+}
+function renderClients(){
+  const list = document.getElementById('client-list');
+  if(!list) return;
+  const q = (document.getElementById('client-search').value || '').toLowerCase().replace(/\s/g,'');
+  const sf = document.getElementById('client-status-filter').value;
+  const filtered = klienci.filter(c=>{
+    const st = c.status || 'aktywny';
+    if(sf==='aktywny' && st!=='aktywny') return false;
+    if(sf==='archiwum' && st!=='archiwum') return false;
+    if(!q) return true;
+    return [c.nazwa,c.pesel,c.nip,c.telefon,c.email,c.kontakt].some(v=>(v||'').toLowerCase().replace(/\s/g,'').includes(q));
+  }).sort((a,b)=>(a.nazwa||'').localeCompare(b.nazwa||'','pl'));
+  list.innerHTML = '';
+  if(filtered.length===0){ list.innerHTML = '<div class="empty">Brak klientów spełniających kryteria</div>'; return; }
+  filtered.forEach(c=>{
+    const n = sprawy.filter(s=>s.klientId===c.id).length;
+    const row = document.createElement('div');
+    row.className = 'case-row';
+    row.onclick = ()=>openClientModal(c.id);
+    row.innerHTML = `
+      <div class="case-main">
+        <div class="case-name">${escapeHtml(c.nazwa)}</div>
+        <div class="case-sub">${escapeHtml([c.telefon,c.email].filter(Boolean).join(' · ') || '—')}</div>
+      </div>
+      <span class="case-type-tag">${TYP_LABELS[c.typ||'osoba']}</span>
+      <span class="case-type-tag">${n} ${n===1?'sprawa':'spraw'}</span>`;
+    list.appendChild(row);
+  });
+}
+function openClientModal(id){
+  const c = klienci.find(x=>x.id===id);
+  if(!c) return;
+  const f = (label,val)=>`<div><div class="section-label">${label}</div><div>${escapeHtml(val||'—')}</div></div>`;
+  const t = c.typ||'osoba';
+  document.getElementById('clm-nazwa').textContent = c.nazwa;
+  document.getElementById('clm-meta').textContent = [TYP_LABELS[t], (c.status==='archiwum'?'archiwum':'aktywny'), c.stawka?`${c.stawka} zł/h`:''].filter(Boolean).join(' · ');
+  const ident = [];
+  if(t!=='firma'){ ident.push(f('PESEL',c.pesel)); ident.push(f('Data urodzenia', c.urodzenia?formatDatePl(c.urodzenia):'')); }
+  if(t!=='osoba'){ ident.push(f('NIP',c.nip)); ident.push(f('REGON',c.regon)); ident.push(f('KRS / CEIDG',c.krs)); }
+  if(t==='firma'){ ident.push(f('Reprezentacja',c.reprezentacja)); }
+  document.getElementById('clm-details').innerHTML = `
+    <div class="grid2">${ident.join('')}</div>
+    <div class="grid2" style="margin-top:14px;">
+      ${f(t==='firma'?'Siedziba':'Adres',c.adres)}
+      ${f('Adres do korespondencji',c.adresKor)}
+      ${f('Telefon',c.telefon)}
+      ${f('E-mail',c.email)}
+      ${t==='firma'?f('Osoba do kontaktu',c.kontakt):''}
+      ${f('Preferowany kontakt',FORMA_LABELS[c.forma])}
+    </div>
+    <div class="grid2" style="margin-top:14px;">
+      ${f('Współpraca od',c.wspolpraca?formatDatePl(c.wspolpraca):'')}
+      ${f('Pełnomocnictwo',[c.pelnomData?formatDatePl(c.pelnomData):'',c.pelnomZakres].filter(Boolean).join(' — '))}
+      ${f('Źródło polecenia',c.zrodlo)}
+      ${(c.pola||[]).map(p=>f(escapeHtml(p.k||'—'),p.v)).join('')}
+    </div>
+    ${c.notatka?`<div style="margin-top:14px;"><div class="section-label">Notatki</div><div style="white-space:pre-wrap;">${escapeHtml(c.notatka)}</div></div>`:''}
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="ghost" onclick="editClient('${c.id}')">Edytuj klienta</button>
+      <button class="ghost" onclick="newCaseForClient('${c.id}')">+ Nowa sprawa dla klienta</button>
+      <button class="ghost" onclick="deleteClient('${c.id}')">Usuń</button>
+    </div>`;
+  const cs = sprawy.filter(s=>s.klientId===id || (!s.klientId && s.klient && s.klient.trim().toLowerCase()===(c.nazwa||'').trim().toLowerCase()));
+  document.getElementById('clm-cases').innerHTML = cs.length
+    ? cs.map(s=>`<div class="activity-row" style="cursor:pointer" onclick="closeClientModal();switchView('sprawy');openCaseModal('${s.id}')"><div class="a-content" style="flex:1">${escapeHtml(s.nazwa)}</div><span class="case-type-tag">${STATUS_LABELS[s.status||'w_toku']}</span></div>`).join('')
+    : '<div class="empty">Brak spraw powiązanych z tym klientem</div>';
+  document.getElementById('client-modal').classList.add('active');
+}
+function closeClientModal(){ document.getElementById('client-modal').classList.remove('active'); }
+async function deleteClient(id){
+  const n = sprawy.filter(s=>s.klientId===id).length;
+  const msg = n ? `Klient ma ${n} powiązanych spraw (zostaną, ale stracą powiązanie z kartą). Usunąć kartę klienta?` : 'Usunąć kartę klienta?';
+  if(!confirm(msg)) return;
+  closeClientModal();
+  await deleteDoc('klienci', id);
+}
+function newCaseForClient(id){
+  closeClientModal();
+  switchView('sprawy');
+  openCaseForm();
+  document.getElementById('cf-klient-id').value = id;
+  onCaseClientPick();
+}
+function fillCaseClientSelect(){
+  const sel = document.getElementById('cf-klient-id');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— wybierz z bazy klientów —</option>' +
+    klienci.filter(c=>(c.status||'aktywny')==='aktywny' || c.id===cur)
+      .sort((a,b)=>(a.nazwa||'').localeCompare(b.nazwa||'','pl'))
+      .map(c=>`<option value="${c.id}">${escapeHtml(c.nazwa)}</option>`).join('');
+  sel.value = cur;
+}
+function onCaseClientPick(){
+  const id = document.getElementById('cf-klient-id').value;
+  const c = klienci.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('cf-klient').value = c.nazwa || '';
+  if(!document.getElementById('cf-telefon').value) document.getElementById('cf-telefon').value = c.telefon || '';
+  if(!document.getElementById('cf-adres').value) document.getElementById('cf-adres').value = c.adresKor || c.adres || '';
+  if(document.getElementById('cf-stawka').value==='' && c.stawka) document.getElementById('cf-stawka').value = c.stawka;
+}
+
+/* =========================================================
    SPRAWY (cases)
    ========================================================= */
 let editingCaseId = null;
@@ -950,6 +1368,8 @@ function openCaseForm(){
   document.getElementById('case-form-title').textContent = 'Nowa sprawa';
   ['cf-nazwa','cf-klient','cf-przeciwnik','cf-wartosc','cf-telefon','cf-adres','cf-notatka'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cf-rodzaj').value = 'cywilna';
+  fillCaseClientSelect();
+  document.getElementById('cf-klient-id').value = '';
   document.getElementById('cf-status').value = 'w_toku';
   document.getElementById('cf-stawka').value = '';
   document.getElementById('cf-extra').innerHTML = '';
@@ -979,6 +1399,7 @@ async function saveCase(){
     nazwa,
     rodzaj: document.getElementById('cf-rodzaj').value,
     klient: document.getElementById('cf-klient').value.trim(),
+    klientId: document.getElementById('cf-klient-id').value || null,
     przeciwnik: document.getElementById('cf-przeciwnik').value.trim(),
     wartosc: document.getElementById('cf-wartosc').value.trim(),
     telefon: document.getElementById('cf-telefon').value.trim(),
@@ -1151,6 +1572,8 @@ function editCaseFromModal(id){
   document.getElementById('case-form-title').textContent = 'Edytuj sprawę';
   document.getElementById('cf-nazwa').value = c.nazwa||'';
   document.getElementById('cf-rodzaj').value = c.rodzaj||'cywilna';
+  fillCaseClientSelect();
+  document.getElementById('cf-klient-id').value = c.klientId||'';
   document.getElementById('cf-klient').value = c.klient||'';
   document.getElementById('cf-przeciwnik').value = c.przeciwnik||'';
   document.getElementById('cf-wartosc').value = c.wartosc||'';
@@ -1274,7 +1697,7 @@ async function upsertDoc(col, id, data){
     catch(e){ console.error(e); }
   }
   // local fallback
-  const arr = col==='sprawy'?sprawy:col==='zadania'?zadania:czynnosci;
+  const arr = col==='sprawy'?sprawy:col==='klienci'?klienci:col==='zadania'?zadania:czynnosci;
   const idx = arr.findIndex(x=>x.id===id);
   if(idx>-1) arr[idx] = {...arr[idx], ...data, id};
   else arr.push({id, ...data});
@@ -1285,7 +1708,7 @@ async function deleteDoc(col, id){
     try{ await db.collection(col).doc(id).delete(); return; }
     catch(e){ console.error(e); }
   }
-  const arr = col==='sprawy'?sprawy:col==='zadania'?zadania:czynnosci;
+  const arr = col==='sprawy'?sprawy:col==='klienci'?klienci:col==='zadania'?zadania:czynnosci;
   const idx = arr.findIndex(x=>x.id===id);
   if(idx>-1) arr.splice(idx,1);
   saveLocal(); renderAll();
@@ -1307,6 +1730,8 @@ function formatDatePl(iso){
 function renderAll(){
   renderTaskGroups();
   renderArchive();
+  renderClients();
+  fillCaseClientSelect();
   renderCases();
   renderActivities();
 }
@@ -1314,9 +1739,7 @@ function renderAll(){
 /* =========================================================
    INIT
    ========================================================= */
-loadLocal();
-renderAll();
-initFirestoreListeners();
+startAuth();
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
