@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kancelaria — Zadania i Czynności</title>
+<meta name="theme-color" content="#232320">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kancelaria">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:#f6f4ef;
+  --paper-raised:#fffdf9;
+  --ink:#242220;
+  --ink-soft:#5c584f;
+  --line:#e2ddd1;
+  --burgundy:#7d2a2a;
+  --burgundy-soft:#f4e4e0;
+  --gold:#a1793a;
+  --gold-soft:#f3e8d5;
+  --sage:#4f5d45;
+  --sage-soft:#e6ebe0;
+  --shadow: 0 1px 2px rgba(36,34,32,0.06), 0 4px 16px rgba(36,34,32,0.05);
+  --radius: 10px;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+h1,h2,h3,.serif{font-family:'Source Serif 4',serif;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+/* ---------- App shell ---------- */
+#app{
+  display:flex;
+  min-height:100vh;
+}
+nav.side{
+  width:220px;
+  flex-shrink:0;
+  background:var(--ink);
+  color:#e9e6de;
+  display:flex;
+  flex-direction:column;
+  padding:28px 0;
+}
+nav.side .brand{
+  font-family:'Source Serif 4',serif;
+  font-size:19px;
+  font-weight:600;
+  padding:0 24px 24px;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  margin-bottom:12px;
+  letter-spacing:.2px;
+}
+nav.side .brand small{
+  display:block;
+  font-family:'Inter',sans-serif;
+  font-weight:400;
+  font-size:11px;
+  color:#a39d8d;
+  margin-top:4px;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+nav.side button{
+  all:unset;
+  cursor:pointer;
+  padding:13px 24px;
+  font-size:14.5px;
+  color:#c9c4b6;
+  border-left:3px solid transparent;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+nav.side button:hover{color:#fff;}
+nav.side button.active{
+  color:#fff;
+  background:rgba(255,255,255,0.06);
+  border-left-color:var(--gold);
+  font-weight:500;
+}
+nav.side .spacer{flex:1;}
+nav.side .sync-status{
+  padding:0 24px;
+  font-size:11px;
+  color:#8f8a7c;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:#8f8a7c;flex-shrink:0;}
+.dot.on{background:#7a9c6c;}
+.dot.off{background:#b5544f;}
+
+main{
+  flex:1;
+  min-width:0;
+  padding:36px 40px 100px;
+  max-width:920px;
+}
+.view{display:none;}
+.view.active{display:block;}
+
+.view-header{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:24px;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.view-header h1{
+  font-size:26px;
+  font-weight:600;
+  margin:0;
+}
+.view-header .sub{
+  color:var(--ink-soft);
+  font-size:13.5px;
+  margin-top:2px;
+}
+
+/* ---------- buttons / inputs ---------- */
+button.primary{
+  all:unset;
+  cursor:pointer;
+  background:var(--burgundy);
+  color:#fff;
+  padding:10px 18px;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:500;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+button.primary:hover{background:#6a2222;}
+button.ghost{
+  all:unset;
+  cursor:pointer;
+  color:var(--ink-soft);
+  padding:8px 12px;
+  border-radius:6px;
+  font-size:13.5px;
+}
+button.ghost:hover{background:var(--line);color:var(--ink);}
+input,select,textarea{
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--paper-raised);
+  color:var(--ink);
+  width:100%;
+}
+input:focus,select:focus,textarea:focus{
+  outline:2px solid var(--gold);
+  outline-offset:0px;
+  border-color:var(--gold);
+}
+label{
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  display:block;
+  margin-bottom:5px;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+}
+.field{margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* ---------- cards / panels ---------- */
+.panel{
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+.form-panel{padding:22px;margin-bottom:28px;}
+.form-panel h3{margin:0 0 16px;font-size:15px;}
+
+/* search */
+.search-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+}
+.search-row input{flex:1;}
+
+/* ---------- Zadania (tasks) ---------- */
+.task-groups{display:flex;flex-direction:column;gap:26px;}
+.task-group h2{
+  font-size:14px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--ink-soft);
+  margin:0 0 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.task-group h2 .count{
+  background:var(--line);
+  color:var(--ink-soft);
+  font-size:11px;
+  padding:1px 7px;
+  border-radius:20px;
+  font-weight:600;
+}
+.task-item{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--paper-raised);
+  margin-bottom:8px;
+}
+.task-item.done{opacity:.5;}
+.task-item.done .task-text{text-decoration:line-through;}
+.checkbox{
+  width:19px;height:19px;
+  border-radius:50%;
+  border:2px solid var(--ink-soft);
+  flex-shrink:0;
+  cursor:pointer;
+  margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  transition:.15s;
+}
+.checkbox.checked{background:var(--sage);border-color:var(--sage);}
+.checkbox.checked::after{content:'✓';color:#fff;font-size:12px;}
+.task-body{flex:1;min-width:0;}
+.task-text{font-size:14.5px;line-height:1.4;}
+.task-meta{
+  margin-top:5px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.badge{
+  font-size:10.5px;
+  padding:2px 8px;
+  border-radius:20px;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+.badge.prio-wysoki{background:var(--burgundy-soft);color:var(--burgundy);}
+.badge.prio-sredni{background:var(--gold-soft);color:var(--gold);}
+.badge.prio-niski{background:var(--sage-soft);color:var(--sage);}
+.badge.case-link{background:var(--line);color:var(--ink-soft);cursor:pointer;}
+.task-actions{display:flex;gap:4px;}
+.icon-btn{
+  all:unset;cursor:pointer;
+  width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:6px;
+  color:var(--ink-soft);
+  font-size:14px;
+}
+.icon-btn:hover{background:var(--line);color:var(--ink);}
+.empty{
+  color:var(--ink-soft);
+  font-size:13.5px;
+  padding:20px;
+  text-align:center;
+  border:1px dashed var(--line);
+  border-radius:8px;
+}
+
+/* ---------- Sprawy (cases) ---------- */
+.case-list{display:flex;flex-direction:column;gap:8px;}
+.case-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px 16px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--paper-raised);
+  cursor:pointer;
+}
+.case-row:hover{border-color:var(--gold);}
+.case-row .case-main{flex:1;min-width:0;}
+.case-row .case-name{font-size:15px;font-weight:600;font-family:'Source Serif 4',serif;}
+.case-row .case-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+.case-type-tag{
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+  font-weight:600;
+  color:var(--ink-soft);
+  background:var(--line);
+  padding:3px 9px;
+  border-radius:20px;
+  flex-shrink:0;
+}
+
+/* case detail modal */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(36,34,32,0.45);
+  display:none;
+  align-items:flex-start;
+  justify-content:center;
+  padding:40px 16px;
+  overflow-y:auto;
+  z-index:50;
+}
+.modal-overlay.active{display:flex;}
+.modal{
+  background:var(--paper-raised);
+  border-radius:14px;
+  max-width:620px;
+  width:100%;
+  padding:28px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
+}
+.modal-close{
+  float:right;
+  all:unset;cursor:pointer;
+  color:var(--ink-soft);
+  font-size:20px;
+  line-height:1;
+  padding:4px;
+}
+.modal h2{margin:0 0 4px;font-size:21px;}
+.modal .modal-meta{color:var(--ink-soft);font-size:13px;margin-bottom:18px;}
+.divider{height:1px;background:var(--line);margin:20px 0;}
+.activity-row{
+  display:flex;
+  gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid var(--line);
+  font-size:13.5px;
+}
+.activity-row:last-child{border-bottom:none;}
+.activity-row .a-time{
+  color:var(--ink-soft);
+  flex-shrink:0;
+  width:64px;
+}
+.activity-row .a-dur{
+  flex-shrink:0;
+  color:var(--gold);
+  font-weight:600;
+  width:52px;
+  text-align:right;
+}
+.section-label{
+  font-size:11.5px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--ink-soft);
+  margin-bottom:10px;
+}
+
+/* ---------- Czynności (activities) ---------- */
+.autocomplete-wrap{position:relative;}
+.autocomplete-list{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;right:0;
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-radius:8px;
+  box-shadow:var(--shadow);
+  max-height:220px;
+  overflow-y:auto;
+  z-index:10;
+  display:none;
+}
+.autocomplete-list.active{display:block;}
+.autocomplete-list div{
+  padding:9px 12px;
+  cursor:pointer;
+  font-size:13.5px;
+  border-bottom:1px solid var(--line);
+}
+.autocomplete-list div:last-child{border-bottom:none;}
+.autocomplete-list div:hover{background:var(--gold-soft);}
+.selected-case-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:var(--sage-soft);
+  color:var(--sage);
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:500;
+}
+.selected-case-chip button{
+  all:unset;cursor:pointer;
+  font-size:14px;
+  line-height:1;
+}
+.act-list{display:flex;flex-direction:column;}
+.act-day-header{
+  font-size:11.5px;
+  font-weight:600;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  letter-spacing:.4px;
+  margin:22px 0 8px;
+}
+.act-day-header:first-child{margin-top:0;}
+.act-entry{
+  display:flex;
+  gap:14px;
+  padding:11px 4px;
+  border-bottom:1px solid var(--line);
+  align-items:flex-start;
+}
+.act-entry .a-dur{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  color:var(--gold);
+  width:48px;
+  flex-shrink:0;
+  padding-top:1px;
+}
+.act-entry .a-content{flex:1;min-width:0;}
+.act-entry .a-desc{font-size:14px;}
+.act-entry .a-case{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+
+/* mobile bottom nav */
+.mobile-nav{display:none;}
+@media (max-width: 780px){
+  nav.side{display:none;}
+  main{padding:20px 16px 90px;max-width:100%;}
+  .mobile-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--ink);
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    z-index:40;
+    justify-content:space-around;
+  }
+  .mobile-nav button{
+    all:unset;cursor:pointer;
+    color:#a39d8d;
+    font-size:11px;
+    display:flex;flex-direction:column;
+    align-items:center;gap:3px;
+    padding:6px 10px;
+    flex:1;
+  }
+  .mobile-nav button.active{color:#fff;}
+  .mobile-nav .ic{font-size:18px;}
+  .grid2{grid-template-columns:1fr;}
+  .view-header h1{font-size:22px;}
+}
+
+.fab{
+  position:fixed;
+  bottom:24px;right:24px;
+  width:54px;height:54px;
+  border-radius:50%;
+  background:var(--burgundy);
+  color:#fff;
+  border:none;
+  font-size:26px;
+  box-shadow:0 6px 20px rgba(125,42,42,0.35);
+  cursor:pointer;
+  display:none;
+  align-items:center;justify-content:center;
+  z-index:30;
+}
+@media (max-width: 780px){
+  .fab{display:flex;bottom:78px;}
+}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <nav class="side">
+    <div class="brand">Kancelaria<small>Zadania i czynności</small></div>
+    <button data-view="zadania" class="nav-btn active"><span>Zadania</span></button>
+    <button data-view="sprawy" class="nav-btn"><span>Sprawy</span></button>
+    <button data-view="czynnosci" class="nav-btn"><span>Czynności</span></button>
+    <button data-view="archiwum" class="nav-btn"><span>Archiwum</span></button>
+    <div class="spacer"></div>
+    <div class="sync-status"><span class="dot off" id="sync-dot"></span><span id="sync-text">łączenie…</span></div>
+  </nav>
+
+  <main>
+    <!-- ZADANIA -->
+    <section class="view active" id="view-zadania">
+      <div class="view-header">
+        <div><h1>Zadania</h1><div class="sub">To, co trzeba zrobić — posegregowane wg rodzaju</div></div>
+        <button class="primary" onclick="openTaskForm()">+ Nowe zadanie</button>
+      </div>
+
+      <div class="panel form-panel" id="task-form-panel" style="display:none;">
+        <h3 id="task-form-title">Nowe zadanie</h3>
+        <div class="field">
+          <label>Treść</label>
+          <textarea id="tf-tresc" rows="2" placeholder="np. Zadzwonić do klienta ws. terminu rozprawy"></textarea>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Kategoria</label>
+            <select id="tf-kategoria">
+              <option value="wazne_pilne">Ważne / pilne</option>
+              <option value="do_napisania">Do napisania</option>
+              <option value="drobne">Drobne (telefony itp.)</option>
+              <option value="do_zlecenia">Do zlecenia pracownikowi</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Priorytet</label>
+            <select id="tf-priorytet">
+              <option value="wysoki">Wysoki</option>
+              <option value="sredni" selected>Średni</option>
+              <option value="niski">Niski</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Powiąż ze sprawą (opcjonalnie)</label>
+          <div class="autocomplete-wrap">
+            <input type="text" id="tf-sprawa-search" placeholder="Szukaj sprawy…" autocomplete="off">
+            <div class="autocomplete-list" id="tf-sprawa-list"></div>
+          </div>
+          <div id="tf-sprawa-selected" style="margin-top:8px;"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <button class="primary" onclick="saveTask()">Zapisz</button>
+          <button class="ghost" onclick="closeTaskForm()">Anuluj</button>
+        </div>
+      </div>
+
+      <div class="task-groups" id="task-groups"></div>
+    </section>
+
+    <!-- SPRAWY -->
+    <section class="view" id="view-sprawy">
+      <div class="view-header">
+        <div><h1>Sprawy</h1><div class="sub">Karty spraw — wspólne z aplikacją Rozliczenia</div></div>
+        <button class="primary" onclick="openCaseForm()">+ Nowa sprawa</button>
+      </div>
+
+      <div class="panel form-panel" id="case-form-panel" style="display:none;">
+        <h3 id="case-form-title">Nowa sprawa</h3>
+        <div class="grid2">
+          <div class="field"><label>Nazwa sprawy</label><input id="cf-nazwa" placeholder="np. Kowalski / Nowak — o zapłatę"></div>
+          <div class="field"><label>Rodzaj sprawy</label>
+            <select id="cf-rodzaj">
+              <option value="cywilna">Cywilna</option>
+              <option value="karna">Karna</option>
+              <option value="administracyjna">Administracyjna</option>
+              <option value="rodzinna">Rodzinna</option>
+              <option value="pracownicza">Pracownicza</option>
+              <option value="gospodarcza">Gospodarcza</option>
+              <option value="inna">Inna</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Klient</label><input id="cf-klient" placeholder="Imię i nazwisko / firma"></div>
+          <div class="field"><label>Przeciwnik</label><input id="cf-przeciwnik" placeholder="Strona przeciwna"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Wartość sprawy</label><input id="cf-wartosc" placeholder="np. 25 000 zł"></div>
+          <div class="field"><label>Telefon klienta</label><input id="cf-telefon" placeholder="np. 600 000 000"></div>
+        </div>
+        <div class="field"><label>Adres klienta</label><input id="cf-adres" placeholder="Adres korespondencyjny"></div>
+        <div class="grid2">
+          <div class="field"><label>Status sprawy</label>
+            <select id="cf-status">
+              <option value="w_toku">W toku</option>
+              <option value="zawieszona">Zawieszona</option>
+              <option value="zakonczona">Zakończona</option>
+              <option value="archiwum">Archiwum</option>
+            </select>
+          </div>
+          <div class="field"><label>Stawka godzinowa (zł/h)</label><input id="cf-stawka" type="number" min="0" step="1" placeholder="np. 300"></div>
+        </div>
+        <div class="field">
+          <label>Pola dodatkowe</label>
+          <div id="cf-extra"></div>
+          <button class="ghost" type="button" onclick="addExtraRow()">+ Dodaj pole (np. sygnatura akt)</button>
+        </div>
+        <div class="field"><label>Notatka ws. rozliczenia</label><textarea id="cf-notatka" rows="2" placeholder="np. ryczałt 5000 zł + success fee 5%"></textarea></div>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <button class="primary" onclick="saveCase()">Zapisz</button>
+          <button class="ghost" onclick="closeCaseForm()">Anuluj</button>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input type="text" id="case-search" placeholder="Szukaj sprawy, klienta, przeciwnika…" oninput="renderCases()">
+        <select id="case-status-filter" onchange="renderCases()" style="width:auto;">
+          <option value="aktywne">Aktywne</option>
+          <option value="zakonczona">Zakończone</option>
+          <option value="archiwum">Archiwum</option>
+          <option value="wszystkie">Wszystkie</option>
+        </select>
+      </div>
+      <div class="case-list" id="case-list"></div>
+    </section>
+
+    <!-- CZYNNOŚCI -->
+    <section class="view" id="view-czynnosci">
+      <div class="view-header">
+        <div><h1>Czynności</h1><div class="sub">Szybka ewidencja tego, co właśnie zrobiłeś</div></div>
+      </div>
+
+      <div class="panel form-panel">
+        <h3>Zapisz czynność</h3>
+        <div class="field">
+          <label>Sprawa</label>
+          <div class="autocomplete-wrap">
+            <input type="text" id="af-sprawa-search" placeholder="Zacznij pisać nazwę sprawy lub klienta…" autocomplete="off">
+            <div class="autocomplete-list" id="af-sprawa-list"></div>
+          </div>
+          <div id="af-sprawa-selected" style="margin-top:8px;"></div>
+        </div>
+        <div class="field"><label>Opis czynności</label><textarea id="af-opis" rows="2" placeholder="np. Telefon z klientem ws. ugody; krótka analiza pisma przeciwnika"></textarea></div>
+        <div class="grid2">
+          <div class="field"><label>Czas poświęcony (minuty)</label><input type="number" id="af-czas" placeholder="np. 20" min="1"></div>
+          <div class="field"><label>Data</label><input type="date" id="af-data"></div>
+        </div>
+        <div class="field"><label>Stawka dla tej czynności (zł/h) — puste = stawka ze sprawy</label><input type="number" id="af-stawka" min="0" step="1" placeholder="np. 400"></div>
+        <button class="primary" onclick="saveActivity()">Zapisz czynność</button>
+      </div>
+
+      <div class="search-row"><input type="text" id="act-search" placeholder="Filtruj po sprawie lub opisie…" oninput="renderActivities()"></div>
+      <div class="act-list" id="act-list"></div>
+    </section>
+
+    <!-- ARCHIWUM -->
+    <section class="view" id="view-archiwum">
+      <div class="view-header">
+        <div><h1>Archiwum</h1><div class="sub">Zrobione zadania</div></div>
+      </div>
+      <div class="task-groups" id="archive-groups"></div>
+    </section>
+  </main>
+</div>
+
+<div class="mobile-nav">
+  <button data-view="zadania" class="mnav-btn active"><span class="ic">☐</span>Zadania</button>
+  <button data-view="sprawy" class="mnav-btn"><span class="ic">▤</span>Sprawy</button>
+  <button data-view="czynnosci" class="mnav-btn"><span class="ic">✎</span>Czynności</button>
+  <button data-view="archiwum" class="mnav-btn"><span class="ic">▦</span>Archiwum</button>
+</div>
+
+<button class="fab" id="fab-btn">+</button>
+
+<!-- Case detail modal -->
+<div class="modal-overlay" id="case-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCaseModal()">×</button>
+    <h2 id="cm-nazwa"></h2>
+    <div class="modal-meta" id="cm-meta"></div>
+    <div id="cm-details"></div>
+    <div class="divider"></div>
+    <div class="section-label">Zadania powiązane</div>
+    <div id="cm-tasks"></div>
+    <div class="divider"></div>
+    <div class="section-label">Czynności i podliczenie wynagrodzenia</div>
+    <div class="grid2" style="margin-bottom:10px;">
+      <div><label>Od</label><input type="date" id="cm-from" onchange="renderCaseActivities()"></div>
+      <div><label>Do</label><input type="date" id="cm-to" onchange="renderCaseActivities()"></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;margin-bottom:12px;">
+      <input type="checkbox" id="cm-only-open" style="width:auto;" onchange="renderCaseActivities()"> Tylko czynności do rozliczenia
+    </label>
+    <div id="cm-activities"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* =========================================================
+   FIREBASE CONFIG
+   Wklej tu dokładnie ten sam obiekt configu co w aplikacji
+   "rozliczenia", żeby dane (sprawy) były wspólne.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyAxzE-49f5vK9lsITAL8qvj7Z54n26nmHc",
+  authDomain: "rozliczeniamm-4d039.firebaseapp.com",
+  projectId: "rozliczeniamm-4d039",
+  storageBucket: "rozliczeniamm-4d039.firebasestorage.app",
+  messagingSenderId: "353054838157",
+  appId: "1:353054838157:web:67bd087eea6e15a98581c4"
+};
+
+let db = null;
+let firestoreReady = false;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  firestoreReady = true;
+}catch(e){
+  console.warn("Firebase init failed, working in local-only mode.", e);
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let sprawy = [];
+let zadania = [];
+let czynnosci = [];
+let activeCaseId = null; // for the linking autocompletes
+
+const LS_KEYS = { sprawy:'k_sprawy', zadania:'k_zadania', czynnosci:'k_czynnosci' };
+
+function loadLocal(){
+  try{
+    sprawy = JSON.parse(localStorage.getItem(LS_KEYS.sprawy) || '[]');
+    zadania = JSON.parse(localStorage.getItem(LS_KEYS.zadania) || '[]');
+    czynnosci = JSON.parse(localStorage.getItem(LS_KEYS.czynnosci) || '[]');
+  }catch(e){}
+}
+function saveLocal(){
+  localStorage.setItem(LS_KEYS.sprawy, JSON.stringify(sprawy));
+  localStorage.setItem(LS_KEYS.zadania, JSON.stringify(zadania));
+  localStorage.setItem(LS_KEYS.czynnosci, JSON.stringify(czynnosci));
+}
+
+function setSyncStatus(connected){
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  if(connected){
+    dot.className = 'dot on';
+    txt.textContent = 'zsynchronizowano';
+  }else{
+    dot.className = 'dot off';
+    txt.textContent = firestoreReady ? 'łączenie…' : 'tryb lokalny';
+  }
+}
+
+function initFirestoreListeners(){
+  if(!firestoreReady){ setSyncStatus(false); return; }
+  db.collection('sprawy').onSnapshot(snap=>{
+    sprawy = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    saveLocal(); renderAll(); setSyncStatus(true);
+  }, err=>{ console.error(err); setSyncStatus(false); });
+
+  db.collection('zadania').onSnapshot(snap=>{
+    zadania = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    saveLocal(); renderAll(); setSyncStatus(true);
+  }, err=>{ console.error(err); setSyncStatus(false); });
+
+  db.collection('czynnosci').onSnapshot(snap=>{
+    czynnosci = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    saveLocal(); renderAll(); setSyncStatus(true);
+  }, err=>{ console.error(err); setSyncStatus(false); });
+}
+
+function uid(){ return 'id_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+function switchView(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+}
+document.querySelectorAll('.nav-btn, .mnav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>switchView(btn.dataset.view));
+});
+document.getElementById('fab-btn').addEventListener('click', ()=>{
+  const activeView = document.querySelector('.view.active').id;
+  if(activeView === 'view-zadania') openTaskForm();
+  else if(activeView === 'view-sprawy') openCaseForm();
+  else if(activeView === 'view-czynnosci') document.getElementById('af-opis').focus();
+});
+
+/* =========================================================
+   ZADANIA (tasks)
+   ========================================================= */
+const KATEGORIE_LABELS = {
+  wazne_pilne: 'Ważne / pilne',
+  do_napisania: 'Do napisania',
+  drobne: 'Drobne',
+  do_zlecenia: 'Do zlecenia pracownikowi'
+};
+const KATEGORIE_ORDER = ['wazne_pilne','do_napisania','drobne','do_zlecenia'];
+
+let editingTaskId = null;
+let tfSelectedCaseId = null;
+
+function openTaskForm(prefillCaseId){
+  editingTaskId = null;
+  tfSelectedCaseId = prefillCaseId || null;
+  document.getElementById('task-form-title').textContent = 'Nowe zadanie';
+  document.getElementById('tf-tresc').value = '';
+  document.getElementById('tf-kategoria').value = 'wazne_pilne';
+  document.getElementById('tf-priorytet').value = 'sredni';
+  document.getElementById('tf-sprawa-search').value = '';
+  renderTfSelectedCase();
+  document.getElementById('task-form-panel').style.display = 'block';
+  document.getElementById('tf-tresc').focus();
+}
+function closeTaskForm(){
+  document.getElementById('task-form-panel').style.display = 'none';
+}
+function editTask(id){
+  const t = zadania.find(x=>x.id===id);
+  if(!t) return;
+  editingTaskId = id;
+  tfSelectedCaseId = t.sprawaId || null;
+  document.getElementById('task-form-title').textContent = 'Edytuj zadanie';
+  document.getElementById('tf-tresc').value = t.tresc || '';
+  document.getElementById('tf-kategoria').value = t.kategoria || 'wazne_pilne';
+  document.getElementById('tf-priorytet').value = t.priorytet || 'sredni';
+  renderTfSelectedCase();
+  document.getElementById('task-form-panel').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function renderTfSelectedCase(){
+  const el = document.getElementById('tf-sprawa-selected');
+  if(!tfSelectedCaseId){ el.innerHTML=''; return; }
+  const c = sprawy.find(s=>s.id===tfSelectedCaseId);
+  if(!c){ el.innerHTML=''; return; }
+  el.innerHTML = `<span class="selected-case-chip">${escapeHtml(c.nazwa)}<button onclick="tfSelectedCaseId=null;renderTfSelectedCase()">×</button></span>`;
+}
+
+async function saveTask(){
+  const tresc = document.getElementById('tf-tresc').value.trim();
+  if(!tresc){ alert('Podaj treść zadania.'); return; }
+  const payload = {
+    tresc,
+    kategoria: document.getElementById('tf-kategoria').value,
+    priorytet: document.getElementById('tf-priorytet').value,
+    sprawaId: tfSelectedCaseId || null,
+    status: editingTaskId ? (zadania.find(t=>t.id===editingTaskId)||{}).status || 'aktywne' : 'aktywne',
+    utworzono: editingTaskId ? (zadania.find(t=>t.id===editingTaskId)||{}).utworzono || Date.now() : Date.now()
+  };
+  if(editingTaskId){
+    await upsertDoc('zadania', editingTaskId, payload);
+  }else{
+    await upsertDoc('zadania', uid(), payload);
+  }
+  closeTaskForm();
+}
+
+async function toggleTask(id){
+  const t = zadania.find(x=>x.id===id);
+  if(!t) return;
+  const newStatus = t.status === 'zrobione' ? 'aktywne' : 'zrobione';
+  await upsertDoc('zadania', id, {...t, status:newStatus, zakonczono: newStatus==='zrobione'?Date.now():null});
+}
+async function deleteTask(id){
+  if(!confirm('Usunąć to zadanie?')) return;
+  await deleteDoc('zadania', id);
+}
+
+function renderTaskGroups(){
+  const container = document.getElementById('task-groups');
+  const active = zadania.filter(t=>t.status!=='zrobione');
+  container.innerHTML = '';
+  KATEGORIE_ORDER.forEach(kat=>{
+    const items = active.filter(t=>t.kategoria===kat)
+      .sort((a,b)=>prioRank(b.priorytet)-prioRank(a.priorytet) || a.utworzono-b.utworzono);
+    const group = document.createElement('div');
+    group.className = 'task-group';
+    group.innerHTML = `<h2>${KATEGORIE_LABELS[kat]} <span class="count">${items.length}</span></h2>`;
+    if(items.length===0){
+      group.innerHTML += `<div class="empty">Brak zadań w tej kategorii</div>`;
+    }else{
+      items.forEach(t=> group.appendChild(taskItemEl(t)) );
+    }
+    container.appendChild(group);
+  });
+}
+function prioRank(p){ return p==='wysoki'?3:p==='sredni'?2:1; }
+
+function taskItemEl(t){
+  const el = document.createElement('div');
+  el.className = 'task-item' + (t.status==='zrobione' ? ' done' : '');
+  const c = t.sprawaId ? sprawy.find(s=>s.id===t.sprawaId) : null;
+  el.innerHTML = `
+    <div class="checkbox ${t.status==='zrobione'?'checked':''}" onclick="toggleTask('${t.id}')"></div>
+    <div class="task-body">
+      <div class="task-text">${escapeHtml(t.tresc)}</div>
+      <div class="task-meta">
+        <span class="badge prio-${t.priorytet}">${t.priorytet==='wysoki'?'Wysoki':t.priorytet==='sredni'?'Średni':'Niski'}</span>
+        ${c ? `<span class="badge case-link" onclick="openCaseModal('${c.id}')">${escapeHtml(c.nazwa)}</span>` : ''}
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="icon-btn" onclick="editTask('${t.id}')" title="Edytuj">✎</button>
+      <button class="icon-btn" onclick="deleteTask('${t.id}')" title="Usuń">🗑</button>
+    </div>`;
+  return el;
+}
+
+function renderArchive(){
+  const container = document.getElementById('archive-groups');
+  const done = zadania.filter(t=>t.status==='zrobione').sort((a,b)=>(b.zakonczono||0)-(a.zakonczono||0));
+  container.innerHTML = '';
+  if(done.length===0){ container.innerHTML = '<div class="empty">Archiwum jest puste</div>'; return; }
+  const group = document.createElement('div');
+  group.className = 'task-group';
+  done.forEach(t=> group.appendChild(taskItemEl(t)) );
+  container.appendChild(group);
+}
+
+/* task-form case autocomplete */
+document.getElementById('tf-sprawa-search').addEventListener('input', e=>{
+  renderCaseAutocomplete(e.target.value, 'tf-sprawa-list', (c)=>{
+    tfSelectedCaseId = c.id;
+    document.getElementById('tf-sprawa-search').value = '';
+    document.getElementById('tf-sprawa-list').classList.remove('active');
+    renderTfSelectedCase();
+  });
+});
+
+/* =========================================================
+   SPRAWY (cases)
+   ========================================================= */
+let editingCaseId = null;
+function openCaseForm(){
+  editingCaseId = null;
+  document.getElementById('case-form-title').textContent = 'Nowa sprawa';
+  ['cf-nazwa','cf-klient','cf-przeciwnik','cf-wartosc','cf-telefon','cf-adres','cf-notatka'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cf-rodzaj').value = 'cywilna';
+  document.getElementById('cf-status').value = 'w_toku';
+  document.getElementById('cf-stawka').value = '';
+  document.getElementById('cf-extra').innerHTML = '';
+  document.getElementById('case-form-panel').style.display = 'block';
+  document.getElementById('cf-nazwa').focus();
+}
+function addExtraRow(k, v){
+  const row = document.createElement('div');
+  row.className = 'grid2 extra-row';
+  row.style.marginBottom = '8px';
+  row.innerHTML = `<input class="ex-k" placeholder="Nazwa pola (np. Sygnatura akt)"><input class="ex-v" placeholder="Wartość">`;
+  row.querySelector('.ex-k').value = k || '';
+  row.querySelector('.ex-v').value = v || '';
+  document.getElementById('cf-extra').appendChild(row);
+}
+function readExtraRows(){
+  return [...document.querySelectorAll('#cf-extra .extra-row')]
+    .map(r=>({k:r.querySelector('.ex-k').value.trim(), v:r.querySelector('.ex-v').value.trim()}))
+    .filter(x=>x.k || x.v);
+}
+function closeCaseForm(){ document.getElementById('case-form-panel').style.display = 'none'; }
+
+async function saveCase(){
+  const nazwa = document.getElementById('cf-nazwa').value.trim();
+  if(!nazwa){ alert('Podaj nazwę sprawy.'); return; }
+  const payload = {
+    nazwa,
+    rodzaj: document.getElementById('cf-rodzaj').value,
+    klient: document.getElementById('cf-klient').value.trim(),
+    przeciwnik: document.getElementById('cf-przeciwnik').value.trim(),
+    wartosc: document.getElementById('cf-wartosc').value.trim(),
+    telefon: document.getElementById('cf-telefon').value.trim(),
+    adres: document.getElementById('cf-adres').value.trim(),
+    notatka: document.getElementById('cf-notatka').value.trim(),
+    status: document.getElementById('cf-status').value,
+    stawka: document.getElementById('cf-stawka').value === '' ? null : Number(document.getElementById('cf-stawka').value),
+    pola: readExtraRows(),
+    utworzono: editingCaseId ? (sprawy.find(s=>s.id===editingCaseId)||{}).utworzono || Date.now() : Date.now()
+  };
+  const id = editingCaseId || uid();
+  await upsertDoc('sprawy', id, payload);
+  closeCaseForm();
+}
+
+const STATUS_LABELS = {w_toku:'W toku',zawieszona:'Zawieszona',zakonczona:'Zakończona',archiwum:'Archiwum'};
+const RODZAJ_LABELS = {cywilna:'Cywilna',karna:'Karna',administracyjna:'Administracyjna',rodzinna:'Rodzinna',pracownicza:'Pracownicza',gospodarcza:'Gospodarcza',inna:'Inna'};
+
+function renderCases(){
+  const q = (document.getElementById('case-search').value || '').toLowerCase();
+  const list = document.getElementById('case-list');
+  const sf = document.getElementById('case-status-filter').value;
+  const filtered = sprawy.filter(s=>{
+    const st = s.status || 'w_toku';
+    if(sf==='aktywne' && !(st==='w_toku' || st==='zawieszona')) return false;
+    if(sf==='zakonczona' && st!=='zakonczona') return false;
+    if(sf==='archiwum' && st!=='archiwum') return false;
+    if(!q) return true;
+    return (s.nazwa||'').toLowerCase().includes(q) || (s.klient||'').toLowerCase().includes(q) || (s.przeciwnik||'').toLowerCase().includes(q);
+  }).sort((a,b)=>(b.utworzono||0)-(a.utworzono||0));
+  list.innerHTML = '';
+  if(filtered.length===0){ list.innerHTML = '<div class="empty">Brak spraw spełniających kryteria</div>'; return; }
+  filtered.forEach(c=>{
+    const row = document.createElement('div');
+    row.className = 'case-row';
+    row.onclick = ()=>openCaseModal(c.id);
+    row.innerHTML = `
+      <div class="case-main">
+        <div class="case-name">${escapeHtml(c.nazwa)}</div>
+        <div class="case-sub">${escapeHtml(c.klient||'—')} ${c.przeciwnik ? 'vs. ' + escapeHtml(c.przeciwnik) : ''}</div>
+      </div>
+      <span class="case-type-tag">${STATUS_LABELS[c.status||'w_toku']}</span>
+      <span class="case-type-tag">${RODZAJ_LABELS[c.rodzaj]||c.rodzaj}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function openCaseModal(id){
+  const c = sprawy.find(s=>s.id===id);
+  if(!c) return;
+  document.getElementById('cm-nazwa').textContent = c.nazwa;
+  document.getElementById('cm-meta').textContent = '';
+  document.getElementById('cm-details').innerHTML = `
+    <div class="grid2">
+      <div><div class="section-label">Klient</div><div>${escapeHtml(c.klient||'—')}</div></div>
+      <div><div class="section-label">Przeciwnik</div><div>${escapeHtml(c.przeciwnik||'—')}</div></div>
+    </div>
+    <div class="grid2" style="margin-top:14px;">
+      <div><div class="section-label">Telefon</div><div>${escapeHtml(c.telefon||'—')}</div></div>
+      <div><div class="section-label">Adres</div><div>${escapeHtml(c.adres||'—')}</div></div>
+    </div>
+    ${(c.pola||[]).length ? `<div style="margin-top:14px;" class="grid2">${c.pola.map(p=>`<div><div class="section-label">${escapeHtml(p.k||'—')}</div><div>${escapeHtml(p.v||'—')}</div></div>`).join('')}</div>` : ''}
+    ${c.notatka ? `<div style="margin-top:14px;"><div class="section-label">Notatka ws. rozliczenia</div><div>${escapeHtml(c.notatka)}</div></div>` : ''}
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button class="ghost" onclick="editCaseFromModal('${c.id}')">Edytuj sprawę</button>
+      <button class="ghost" onclick="closeCaseModal();openTaskForm('${c.id}')">+ Zadanie do tej sprawy</button>
+    </div>`;
+
+  const tasks = zadania.filter(t=>t.sprawaId===id && t.status!=='zrobione');
+  document.getElementById('cm-tasks').innerHTML = tasks.length
+    ? tasks.map(t=>`<div class="activity-row"><div class="a-content" style="flex:1">${escapeHtml(t.tresc)}</div><span class="badge prio-${t.priorytet}">${t.priorytet}</span></div>`).join('')
+    : '<div class="empty">Brak otwartych zadań dla tej sprawy</div>';
+
+  currentCaseId = id;
+  document.getElementById('cm-from').value = '';
+  document.getElementById('cm-to').value = '';
+  document.getElementById('cm-only-open').checked = false;
+  renderCaseActivities();
+
+  document.getElementById('case-modal').classList.add('active');
+}
+
+let currentCaseId = null;
+const fmtPLN = n => (Number(n)||0).toLocaleString('pl-PL',{style:'currency',currency:'PLN'});
+function actRate(a, c){
+  if(a.stawka!==undefined && a.stawka!==null && a.stawka!=='') return Number(a.stawka)||0;
+  return Number(c && c.stawka)||0;
+}
+function caseActivitiesFiltered(){
+  const from = document.getElementById('cm-from').value;
+  const to = document.getElementById('cm-to').value;
+  const onlyOpen = document.getElementById('cm-only-open').checked;
+  return czynnosci.filter(a=>a.sprawaId===currentCaseId
+      && (!from || (a.data||'') >= from)
+      && (!to || (a.data||'') <= to)
+      && (!onlyOpen || !a.rozliczono))
+    .sort((a,b)=>(b.data||'').localeCompare(a.data||'') || (b.utworzono||0)-(a.utworzono||0));
+}
+function renderCaseActivities(){
+  const c = sprawy.find(s=>s.id===currentCaseId);
+  if(!c) return;
+  const acts = caseActivitiesFiltered();
+  const totalMin = acts.reduce((s,a)=>s+(Number(a.czas)||0),0);
+  const totalPln = acts.reduce((s,a)=>s+(Number(a.czas)||0)/60*actRate(a,c),0);
+  const missingRate = acts.some(a=>actRate(a,c)===0);
+  const rows = acts.length
+    ? acts.map(a=>`<div class="activity-row">
+        <div class="a-time">${formatDatePl(a.data)}</div>
+        <div style="flex:1">${escapeHtml(a.opis)}
+          <div style="margin-top:4px;"><span class="badge ${a.rozliczono?'prio-niski':'prio-wysoki'}" style="cursor:pointer;" onclick="toggleSettled('${a.id}')" title="Kliknij, aby zmienić">${a.rozliczono?'rozliczone':'do rozliczenia'}</span></div>
+        </div>
+        <div class="a-dur" style="width:auto;">${a.czas} min</div></div>`).join('')
+    : '<div class="empty">Brak czynności w wybranym zakresie</div>';
+  const summary = acts.length ? `
+    <div style="margin-top:12px;padding:12px;background:var(--gold-soft);border-radius:8px;">
+      <div style="font-size:12.5px;color:var(--ink-soft);">Razem w wybranym zakresie</div>
+      <div class="mono" style="font-size:16px;font-weight:600;margin-top:2px;">${totalMin} min (${(totalMin/60).toFixed(2)} h)</div>
+      <div class="mono" style="font-size:16px;font-weight:600;margin-top:2px;">Wynagrodzenie: ${fmtPLN(totalPln)}</div>
+      ${missingRate ? '<div style="font-size:12px;color:var(--burgundy);margin-top:6px;">Część czynności nie ma stawki — ustaw stawkę w karcie sprawy.</div>' : ''}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <button class="primary" onclick="markVisibleSettled()">Oznacz widoczne jako rozliczone</button>
+      <button class="ghost" onclick="exportCasePdf()">Eksportuj zestawienie do PDF</button>
+    </div>` : '';
+  document.getElementById('cm-activities').innerHTML = rows + summary;
+  const meta = document.getElementById('cm-meta');
+  meta.textContent = `${STATUS_LABELS[c.status||'w_toku']} · ${RODZAJ_LABELS[c.rodzaj]||c.rodzaj}${c.wartosc ? ' · wartość: ' + c.wartosc : ''}${c.stawka ? ' · stawka: ' + fmtPLN(c.stawka) + '/h' : ''}`;
+}
+async function toggleSettled(id){
+  const a = czynnosci.find(x=>x.id===id);
+  if(!a) return;
+  await upsertDoc('czynnosci', id, {...a, rozliczono: !a.rozliczono});
+  renderCaseActivities();
+}
+async function markVisibleSettled(){
+  const acts = caseActivitiesFiltered().filter(a=>!a.rozliczono);
+  if(acts.length===0){ alert('Wszystkie widoczne czynności są już rozliczone.'); return; }
+  if(!confirm(`Oznaczyć ${acts.length} czynności jako rozliczone?`)) return;
+  for(const a of acts){ await upsertDoc('czynnosci', a.id, {...a, rozliczono:true}); }
+  renderCaseActivities();
+}
+function exportCasePdf(){
+  const c = sprawy.find(s=>s.id===currentCaseId);
+  if(!c) return;
+  const acts = caseActivitiesFiltered().slice().reverse();
+  const totalMin = acts.reduce((s,a)=>s+(Number(a.czas)||0),0);
+  const from = document.getElementById('cm-from').value;
+  const to = document.getElementById('cm-to').value;
+  const period = (from||to) ? `${from?formatDatePl(from):'początek'} – ${to?formatDatePl(to):'dziś'}` : 'cały okres';
+  const rows = acts.map(a=>`<tr><td>${formatDatePl(a.data)}</td><td>${escapeHtml(a.opis)}</td><td style="text-align:right;white-space:nowrap;">${a.czas} min</td></tr>`).join('');
+  const w = window.open('', '_blank');
+  if(!w){ alert('Przeglądarka zablokowała okno. Zezwól na wyskakujące okna dla tej strony.'); return; }
+  w.document.write(`<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>Zestawienie czynności — ${escapeHtml(c.nazwa)}</title>
+  <style>body{font-family:Georgia,serif;color:#242220;margin:40px;}h1{font-size:20px;margin:0 0 4px;}.m{color:#5c584f;font-size:13px;margin-bottom:24px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}th,td{padding:8px 6px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top;}th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#5c584f;}
+  .t{margin-top:16px;text-align:right;font-weight:bold;}</style></head><body>
+  <h1>Zestawienie czynności</h1>
+  <div class="m">Sprawa: ${escapeHtml(c.nazwa)}<br>Klient: ${escapeHtml(c.klient||'—')}<br>Okres: ${period}</div>
+  <table><thead><tr><th style="width:90px;">Data</th><th>Czynność</th><th style="text-align:right;">Czas</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="t">Łączny czas: ${totalMin} min (${(totalMin/60).toFixed(2)} h)</div>
+  <script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+function closeCaseModal(){ document.getElementById('case-modal').classList.remove('active'); }
+function editCaseFromModal(id){
+  closeCaseModal();
+  const c = sprawy.find(s=>s.id===id);
+  if(!c) return;
+  editingCaseId = id;
+  document.getElementById('case-form-title').textContent = 'Edytuj sprawę';
+  document.getElementById('cf-nazwa').value = c.nazwa||'';
+  document.getElementById('cf-rodzaj').value = c.rodzaj||'cywilna';
+  document.getElementById('cf-klient').value = c.klient||'';
+  document.getElementById('cf-przeciwnik').value = c.przeciwnik||'';
+  document.getElementById('cf-wartosc').value = c.wartosc||'';
+  document.getElementById('cf-telefon').value = c.telefon||'';
+  document.getElementById('cf-adres').value = c.adres||'';
+  document.getElementById('cf-notatka').value = c.notatka||'';
+  document.getElementById('cf-status').value = c.status||'w_toku';
+  document.getElementById('cf-stawka').value = (c.stawka===undefined||c.stawka===null) ? '' : c.stawka;
+  document.getElementById('cf-extra').innerHTML = '';
+  (c.pola||[]).forEach(p=>addExtraRow(p.k,p.v));
+  switchView('sprawy');
+  document.getElementById('case-form-panel').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* =========================================================
+   CZYNNOŚCI (activities)
+   ========================================================= */
+let afSelectedCaseId = null;
+document.getElementById('af-data').valueAsDate = new Date();
+
+document.getElementById('af-sprawa-search').addEventListener('input', e=>{
+  renderCaseAutocomplete(e.target.value, 'af-sprawa-list', (c)=>{
+    afSelectedCaseId = c.id;
+    document.getElementById('af-sprawa-search').value = '';
+    document.getElementById('af-sprawa-list').classList.remove('active');
+    renderAfSelectedCase();
+  });
+});
+function renderAfSelectedCase(){
+  const el = document.getElementById('af-sprawa-selected');
+  if(!afSelectedCaseId){ el.innerHTML=''; return; }
+  const c = sprawy.find(s=>s.id===afSelectedCaseId);
+  if(!c){ el.innerHTML=''; return; }
+  el.innerHTML = `<span class="selected-case-chip">${escapeHtml(c.nazwa)}<button onclick="afSelectedCaseId=null;renderAfSelectedCase()">×</button></span>`;
+}
+
+async function saveActivity(){
+  const opis = document.getElementById('af-opis').value.trim();
+  const czas = Number(document.getElementById('af-czas').value);
+  const data = document.getElementById('af-data').value;
+  if(!afSelectedCaseId){ alert('Wybierz sprawę.'); return; }
+  if(!opis){ alert('Podaj opis czynności.'); return; }
+  if(!czas || czas<=0){ alert('Podaj czas w minutach.'); return; }
+  const st = document.getElementById('af-stawka').value;
+  const payload = { sprawaId: afSelectedCaseId, opis, czas, data, stawka: st==='' ? null : Number(st), rozliczono: false, utworzono: Date.now() };
+  await upsertDoc('czynnosci', uid(), payload);
+  document.getElementById('af-opis').value = '';
+  document.getElementById('af-czas').value = '';
+  document.getElementById('af-stawka').value = '';
+  afSelectedCaseId = null;
+  renderAfSelectedCase();
+}
+
+function renderActivities(){
+  const q = (document.getElementById('act-search').value || '').toLowerCase();
+  const list = document.getElementById('act-list');
+  const filtered = czynnosci.filter(a=>{
+    if(!q) return true;
+    const c = sprawy.find(s=>s.id===a.sprawaId);
+    return (a.opis||'').toLowerCase().includes(q) || (c && c.nazwa.toLowerCase().includes(q));
+  }).sort((a,b)=> (b.data||'').localeCompare(a.data||'') || (b.utworzono||0)-(a.utworzono||0));
+
+  list.innerHTML = '';
+  if(filtered.length===0){ list.innerHTML = '<div class="empty">Brak czynności</div>'; return; }
+
+  let lastDay = null;
+  filtered.forEach(a=>{
+    if(a.data !== lastDay){
+      lastDay = a.data;
+      const h = document.createElement('div');
+      h.className = 'act-day-header';
+      h.textContent = formatDatePl(a.data);
+      list.appendChild(h);
+    }
+    const c = sprawy.find(s=>s.id===a.sprawaId);
+    const row = document.createElement('div');
+    row.className = 'act-entry';
+    row.innerHTML = `
+      <div class="a-dur">${a.czas}′</div>
+      <div class="a-content">
+        <div class="a-desc">${escapeHtml(a.opis)}</div>
+        <div class="a-case">${c ? escapeHtml(c.nazwa) : '(usunięta sprawa)'}${a.rozliczono ? ' · rozliczone' : ''}</div>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+/* shared case autocomplete renderer */
+function renderCaseAutocomplete(query, listElId, onPick){
+  const listEl = document.getElementById(listElId);
+  const q = query.trim().toLowerCase();
+  if(!q){ listEl.classList.remove('active'); listEl.innerHTML=''; return; }
+  const matches = sprawy.filter(c=> (c.status||'w_toku')!=='archiwum' && (
+    (c.nazwa||'').toLowerCase().includes(q) ||
+    (c.klient||'').toLowerCase().includes(q) ||
+    (c.przeciwnik||'').toLowerCase().includes(q)
+  )).slice(0,8);
+  if(matches.length===0){ listEl.innerHTML = '<div style="color:var(--ink-soft);cursor:default;">Brak wyników</div>'; listEl.classList.add('active'); return; }
+  listEl.innerHTML = matches.map(c=>`<div data-id="${c.id}">${escapeHtml(c.nazwa)} <span style="color:var(--ink-soft);">— ${escapeHtml(c.klient||'')}</span></div>`).join('');
+  listEl.classList.add('active');
+  listEl.querySelectorAll('div[data-id]').forEach(div=>{
+    div.addEventListener('click', ()=>{
+      const c = sprawy.find(s=>s.id===div.dataset.id);
+      if(c) onPick(c);
+    });
+  });
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.autocomplete-wrap')){
+    document.querySelectorAll('.autocomplete-list').forEach(l=>l.classList.remove('active'));
+  }
+});
+
+/* =========================================================
+   FIRESTORE helpers (with local fallback)
+   ========================================================= */
+async function upsertDoc(col, id, data){
+  if(firestoreReady){
+    try{ await db.collection(col).doc(id).set(data, {merge:true}); return; }
+    catch(e){ console.error(e); }
+  }
+  // local fallback
+  const arr = col==='sprawy'?sprawy:col==='zadania'?zadania:czynnosci;
+  const idx = arr.findIndex(x=>x.id===id);
+  if(idx>-1) arr[idx] = {...arr[idx], ...data, id};
+  else arr.push({id, ...data});
+  saveLocal(); renderAll();
+}
+async function deleteDoc(col, id){
+  if(firestoreReady){
+    try{ await db.collection(col).doc(id).delete(); return; }
+    catch(e){ console.error(e); }
+  }
+  const arr = col==='sprawy'?sprawy:col==='zadania'?zadania:czynnosci;
+  const idx = arr.findIndex(x=>x.id===id);
+  if(idx>-1) arr.splice(idx,1);
+  saveLocal(); renderAll();
+}
+
+/* =========================================================
+   UTILS
+   ========================================================= */
+function escapeHtml(str){
+  if(str===undefined||str===null) return '';
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function formatDatePl(iso){
+  if(!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+function renderAll(){
+  renderTaskGroups();
+  renderArchive();
+  renderCases();
+  renderActivities();
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+loadLocal();
+renderAll();
+initFirestoreListeners();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
