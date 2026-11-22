@@ -1,4 +1,4 @@
-const CACHE = 'kancelaria-v7';
+const CACHE = 'kancelaria-v9';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e=>{
@@ -15,7 +15,9 @@ self.addEventListener('activate', e=>{
 
 self.addEventListener('fetch', e=>{
   if(e.request.method !== 'GET') return;
-  // network-first for the app shell so updates land quickly; fall back to cache offline
+  // tylko pliki samej apki — zapytania do Firebase, Google (kalendarz) itp. przechodzą bez zapisu w pamięci podręcznej
+  if(new URL(e.request.url).origin !== self.location.origin) return;
+  // network-first, żeby aktualizacje docierały od razu; offline z pamięci podręcznej
   e.respondWith(
     fetch(e.request).then(res=>{
       const clone = res.clone();

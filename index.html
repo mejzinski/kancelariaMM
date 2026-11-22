@@ -505,6 +505,14 @@ table.rp{width:100%;border-collapse:collapse;font-size:13.5px;}
 table.rp th,table.rp td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
 table.rp th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);}
 table.rp td.r,table.rp th.r{text-align:right;white-space:nowrap;}
+#cal-frame{width:100%;height:calc(100vh - 230px);min-height:460px;border:1px solid var(--line);border-radius:10px;background:#fff;}
+.gs-group{margin-bottom:16px;}
+.gs-item{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper-raised);margin-bottom:6px;cursor:pointer;}
+.gs-item:hover{border-color:var(--gold);}
+.gs-item .t{font-size:14.5px;font-weight:500;}
+.gs-item .st{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+.more-list button{all:unset;box-sizing:border-box;display:block;width:100%;padding:14px 4px;font-size:16px;border-bottom:1px solid var(--line);cursor:pointer;}
+nav.side .nav-act{color:var(--navy-soft);}
 details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bottom:10px;}
 @media (max-width:780px){
   #timer-chip{top:auto;bottom:calc(140px + env(safe-area-inset-bottom,0px));right:14px;}
@@ -533,8 +541,8 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
     font-size:11px;
     display:flex;flex-direction:column;
     align-items:center;gap:3px;
-    padding:6px 10px;
-    flex:1 0 66px;
+    padding:6px 2px;
+    flex:1 1 0;min-width:0;
   }
   .mobile-nav button.active{color:#fff;}
   .mobile-nav .ic{font-size:18px;}
@@ -582,10 +590,12 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
 <div id="app">
   <nav class="side">
     <div class="brand">Kancelaria<small>Zadania i czynności</small></div>
+    <button class="nav-act" onclick="openSearch()"><span>Szukaj</span></button>
     <button data-view="zadania" class="nav-btn active"><span>Zadania</span></button>
     <button data-view="klienci" class="nav-btn"><span>Klienci</span></button>
     <button data-view="sprawy" class="nav-btn"><span>Sprawy</span></button>
     <button data-view="czynnosci" class="nav-btn"><span>Czynności</span></button>
+    <button data-view="kalendarz" class="nav-btn"><span>Kalendarz</span></button>
     <button data-view="raport" class="nav-btn"><span>Raport</span></button>
     <button data-view="archiwum" class="nav-btn"><span>Archiwum</span></button>
     <div class="spacer"></div>
@@ -840,6 +850,35 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
       <div class="act-list" id="act-list"></div>
     </section>
 
+    <!-- KALENDARZ -->
+    <section class="view" id="view-kalendarz">
+      <div class="view-header">
+        <div><h1>Kalendarz</h1><div class="sub">Podgląd Twojego Kalendarza Google</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <a class="ghost-link" href="https://calendar.google.com/" target="_blank" rel="noopener" style="font-size:13.5px;padding:8px 12px;color:var(--ink-soft);text-decoration:none;">Otwórz w Google ↗</a>
+          <button class="ghost" onclick="toggleCalSetup()">Ustawienia</button>
+        </div>
+      </div>
+      <div class="panel form-panel" id="cal-setup" style="display:none;">
+        <h3>Połącz kalendarz</h3>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;">
+          1. Na komputerze otwórz Kalendarz Google → <b>Ustawienia</b> (⚙) → po lewej wybierz swój kalendarz.<br>
+          2. Przewiń do sekcji <b>Zintegruj kalendarz</b> i skopiuj <b>Kod do umieszczenia na stronie</b> (albo sam adres z <code>src="…"</code>).<br>
+          3. Wklej go poniżej i zapisz. Link zapisze się w Twojej bazie, więc wystarczy zrobić to raz.
+        </div>
+        <div class="field"><label>Kod lub adres do osadzenia</label><textarea id="cal-url" rows="3" placeholder='<iframe src="https://calendar.google.com/calendar/embed?src=…"></iframe>'></textarea></div>
+        <div class="field"><label>Widok domyślny</label>
+          <select id="cal-mode"><option value="AGENDA">Lista (agenda)</option><option value="WEEK">Tydzień</option><option value="MONTH">Miesiąc</option></select>
+        </div>
+        <div style="display:flex;gap:10px;"><button class="primary" onclick="saveCal()">Zapisz</button><button class="ghost" onclick="clearCal()">Odłącz</button></div>
+      </div>
+      <div id="cal-empty" class="empty" style="display:none;">Kalendarz nie jest jeszcze połączony. Kliknij „Ustawienia”.</div>
+      <iframe id="cal-frame" title="Kalendarz Google" style="display:none;" referrerpolicy="no-referrer"></iframe>
+      <div id="cal-note" style="display:none;color:var(--ink-soft);font-size:12.5px;margin-top:10px;line-height:1.5;">
+        Jeśli widzisz pustą ramkę albo prośbę o logowanie: prywatny kalendarz wyświetla się tylko wtedy, gdy ta przeglądarka jest zalogowana do Google, a iPhone często blokuje to w apkach. Wtedy użyj przycisku „Otwórz w Google”.
+      </div>
+    </section>
+
     <!-- RAPORT -->
     <section class="view" id="view-raport">
       <div class="view-header">
@@ -887,11 +926,35 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
   <button data-view="klienci" class="mnav-btn"><span class="ic">☻</span>Klienci</button>
   <button data-view="sprawy" class="mnav-btn"><span class="ic">▤</span>Sprawy</button>
   <button data-view="czynnosci" class="mnav-btn"><span class="ic">✎</span>Czynności</button>
-  <button data-view="raport" class="mnav-btn"><span class="ic">≡</span>Raport</button>
-  <button data-view="archiwum" class="mnav-btn"><span class="ic">▦</span>Archiwum</button>
+  <button class="mnav-act" onclick="openSearch()"><span class="ic">⌕</span>Szukaj</button>
+  <button class="mnav-act" id="mnav-more" onclick="openMore()"><span class="ic">≡</span>Więcej</button>
 </div>
 
 <button class="fab" id="fab-btn">+</button>
+
+<!-- Search modal -->
+<div class="modal-overlay" id="search-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSearch()">×</button>
+    <h2>Szukaj</h2>
+    <div class="field" style="margin-top:14px;"><input id="gs-input" type="search" placeholder="Klient, sprawa, zadanie, czynność…" oninput="runSearch()" autocomplete="off" autocapitalize="off"></div>
+    <div id="gs-results"></div>
+  </div>
+</div>
+
+<!-- More modal (mobile) -->
+<div class="modal-overlay" id="more-modal" onclick="if(event.target===this)closeMore()">
+  <div class="modal" style="max-width:360px;">
+    <button class="modal-close" onclick="closeMore()">×</button>
+    <h2>Więcej</h2>
+    <div class="more-list" style="margin-top:10px;">
+      <button onclick="goView('raport')">Raport</button>
+      <button onclick="goView('kalendarz')">Kalendarz</button>
+      <button onclick="goView('archiwum')">Archiwum zadań</button>
+      <button onclick="closeMore();doLogout()" style="color:var(--burgundy);">Wyloguj</button>
+    </div>
+  </div>
+</div>
 
 <!-- Client detail modal -->
 <div class="modal-overlay" id="client-modal">
@@ -1068,6 +1131,20 @@ function setSyncStatus(connected){
   }
 }
 
+/* Wspólna kolekcja „sprawy” z aplikacją Rozliczenia: tamta używa pól client/matter/category/note/archived. */
+const CAT_TO_RODZAJ = { gospodarcze:'gospodarcza', rodzinne:'rodzinna', karne:'karna', cywilne:'cywilna', pracownicze:'pracownicza', administracyjne:'administracyjna', inne:'inna' };
+const RODZAJ_TO_CAT = Object.fromEntries(Object.entries(CAT_TO_RODZAJ).map(([k,v])=>[v,k]));
+function normCase(d){
+  const c = {...d};
+  c.nazwa = d.nazwa || d.matter || '';
+  c.klient = d.klient || d.client || '';
+  c.rodzaj = d.rodzaj || CAT_TO_RODZAJ[d.category] || 'inna';
+  c.notatka = d.notatka != null ? d.notatka : (d.note || '');
+  // „archived” (Rozliczenia) rozstrzyga o archiwum; pozostałe statusy z pola „status”
+  c.status = d.archived ? 'archiwum' : (d.status==='archiwum' ? 'w_toku' : (d.status || 'w_toku'));
+  c.utworzono = d.utworzono || d.createdAt || 0;
+  return c;
+}
 let unsubs = [];
 function initFirestoreListeners(){
   if(!firestoreReady){ setSyncStatus(false); return; }
@@ -1078,10 +1155,18 @@ function initFirestoreListeners(){
       saveLocal(); renderAll(); setSyncStatus(true);
     }, err=>{ console.error(err); setSyncStatus(false); }));
   };
-  bind('sprawy', v=>{ sprawy = v; });
+  bind('sprawy', v=>{ sprawy = v.map(normCase); });
   bind('klienci', v=>{ klienci = v; });
   bind('zadania', v=>{ zadania = v; });
   bind('czynnosci', v=>{ czynnosci = v; });
+  unsubs.push(db.collection('ustawienia').doc('kalendarz').onSnapshot(d=>{
+    if(d.exists){
+      const v = d.data() || {};
+      calCfg = {url: v.url||'', mode: v.mode||'AGENDA'};
+      try{ localStorage.setItem(CAL_LS, JSON.stringify(calCfg)); }catch(e){}
+      renderCalendar();
+    }
+  }, err=>{ console.error(err); }));
 }
 function stopFirestoreListeners(){
   unsubs.forEach(u=>{ try{u();}catch(e){} });
@@ -1138,11 +1223,14 @@ function wipeLocalData(){
   stopFirestoreListeners();
   sprawy = []; klienci = []; zadania = []; czynnosci = [];
   Object.values(LS_KEYS).forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
+  try{ localStorage.removeItem(CAL_LS); }catch(e){}
+  calCfg = {url:'', mode:'AGENDA'}; renderCalendar();
 }
 function initExtras(){
   ['q-tresc','tm-opis','tf-tresc','af-opis'].forEach(attachMic);
   loadTimer();
   setReportPeriod('month');
+  loadCalLocal();
 }
 function startAuth(){
   if(!firestoreReady || !auth){
@@ -1174,7 +1262,13 @@ function switchView(view){
   document.getElementById('view-' + view).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
   document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  const more = document.getElementById('mnav-more');
+  if(more) more.classList.toggle('active', ['raport','kalendarz','archiwum'].includes(view));
+  if(view==='kalendarz' && typeof renderCalendar==='function') renderCalendar();
 }
+function openMore(){ document.getElementById('more-modal').classList.add('active'); }
+function closeMore(){ document.getElementById('more-modal').classList.remove('active'); }
+function goView(v){ closeMore(); switchView(v); window.scrollTo(0,0); }
 document.querySelectorAll('.nav-btn, .mnav-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>switchView(btn.dataset.view));
 });
@@ -1537,6 +1631,151 @@ async function saveQuick(){
 }
 
 /* =========================================================
+   WYSZUKIWARKA GLOBALNA
+   ========================================================= */
+const gsNorm = t => String(t==null?'':t).toLowerCase().replace(/ł/g,'l').normalize('NFD').replace(/[̀-ͯ]/g,'');
+function gsHay(parts){
+  const n = gsNorm(parts.filter(Boolean).join(' '));
+  return n + ' ' + n.replace(/[\s\-\.]/g,'');
+}
+function openSearch(){
+  closeMore();
+  document.getElementById('gs-input').value = '';
+  document.getElementById('gs-results').innerHTML = '<div class="empty">Wpisz fragment nazwy, nazwiska, telefonu, numeru sprawy lub opisu</div>';
+  document.getElementById('search-modal').classList.add('active');
+  setTimeout(()=>document.getElementById('gs-input').focus(), 60);
+}
+function closeSearch(){ document.getElementById('search-modal').classList.remove('active'); }
+document.addEventListener('keydown', e=>{
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k' && !document.body.classList.contains('locked')){ e.preventDefault(); openSearch(); }
+  if(e.key==='Escape'){ closeSearch(); closeMore(); }
+});
+function runSearch(){
+  const q = gsNorm(document.getElementById('gs-input').value).trim();
+  const out = document.getElementById('gs-results');
+  if(q.length<2){ out.innerHTML = '<div class="empty">Wpisz co najmniej 2 znaki</div>'; return; }
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const qd = q.replace(/[\s\-\.]/g,'');
+  const match = h => tokens.every(t=>h.includes(t)) || (qd.length>=3 && h.includes(qd));
+  const LIM = 8;
+  const caseName = id => (sprawy.find(x=>x.id===id)||{}).nazwa || '';
+  const groups = [];
+
+  const kl = klienci.filter(c=>match(gsHay([c.nazwa,c.telefon,c.email,c.nip,c.pesel,c.regon,c.krs,c.adres,c.adresKor,c.kontakt,c.notatka,...(c.pola||[]).map(p=>p.k+' '+p.v)])))
+    .sort((a,b)=>(a.nazwa||'').localeCompare(b.nazwa||'','pl'))
+    .map(c=>({t:c.nazwa, st:[TYP_LABELS[c.typ||'osoba'],c.telefon,c.email].filter(Boolean).join(' · '), go:`gsOpen('klient','${c.id}')`}));
+  groups.push(['Klienci',kl]);
+
+  const sp = sprawy.filter(c=>match(gsHay([c.nazwa,caseClientName(c),c.przeciwnik,c.wartosc,c.telefon,c.adres,c.notatka,...(c.pola||[]).map(p=>p.k+' '+p.v)])))
+    .sort((a,b)=>(b.utworzono||0)-(a.utworzono||0))
+    .map(c=>({t:c.nazwa, st:[caseClientName(c),(c.przeciwnik?'vs. '+c.przeciwnik:''),STATUS_LABELS[c.status||'w_toku']].filter(Boolean).join(' · '), go:`gsOpen('sprawa','${c.id}')`}));
+  groups.push(['Sprawy',sp]);
+
+  const za = zadania.filter(t=>match(gsHay([t.tresc,caseName(t.sprawaId)])))
+    .sort((a,b)=>((a.status==='zrobione')-(b.status==='zrobione')) || (b.utworzono||0)-(a.utworzono||0))
+    .map(t=>({t:t.tresc.length>120?t.tresc.slice(0,120)+'…':t.tresc,
+      st:[t.kategoria==='notatka'?'Notatka':'Zadanie', t.status==='zrobione'?'zrobione':'', caseName(t.sprawaId)].filter(Boolean).join(' · '), go:`gsOpen('zadanie','${t.id}')`}));
+  groups.push(['Zadania i notatki',za]);
+
+  const cz = czynnosci.filter(a=>{
+      const c = sprawy.find(x=>x.id===a.sprawaId)||{};
+      return match(gsHay([a.opis,c.nazwa,caseClientName(c)]));
+    })
+    .sort((a,b)=>((b.data||'')<(a.data||'')?-1:(b.data||'')>(a.data||'')?1:0))
+    .map(a=>({t:a.opis.length>120?a.opis.slice(0,120)+'…':a.opis,
+      st:[formatDatePl(a.data), a.czas+' min', caseName(a.sprawaId)].filter(Boolean).join(' · '), go:`gsOpen('czynnosc','${a.sprawaId}')`}));
+  groups.push(['Czynności',cz]);
+
+  const total = groups.reduce((n,g)=>n+g[1].length,0);
+  if(!total){ out.innerHTML = '<div class="empty">Brak wyników</div>'; return; }
+  out.innerHTML = groups.filter(g=>g[1].length).map(([name,items])=>`
+    <div class="gs-group"><div class="section-label">${name} (${items.length})</div>
+    ${items.slice(0,LIM).map(i=>`<div class="gs-item" onclick="${i.go}"><div class="t">${escapeHtml(i.t)}</div><div class="st">${escapeHtml(i.st)}</div></div>`).join('')}
+    ${items.length>LIM?`<div style="font-size:12px;color:var(--ink-soft);">…i ${items.length-LIM} więcej — doprecyzuj wyszukiwanie</div>`:''}</div>`).join('');
+}
+function gsOpen(kind,id){
+  closeSearch();
+  if(kind==='klient'){ switchView('klienci'); openClientModal(id); }
+  else if(kind==='sprawa' || kind==='czynnosc'){ switchView('sprawy'); openCaseModal(id); }
+  else if(kind==='zadanie'){ switchView('zadania'); editTask(id); }
+}
+
+/* =========================================================
+   KALENDARZ GOOGLE (podgląd w ramce)
+   ========================================================= */
+const CAL_LS = 'k_cal';
+let calCfg = {url:'', mode:'AGENDA'};
+let calLoadedSrc = '';
+function parseCalUrl(raw){
+  if(!raw) return null;
+  const m = String(raw).match(/src\s*=\s*["']([^"']+)["']/i);
+  let u = (m ? m[1] : String(raw)).trim().replace(/&amp;/g,'&');
+  try{
+    const x = new URL(u);
+    if(x.protocol!=='https:' || x.hostname!=='calendar.google.com' || !x.pathname.startsWith('/calendar')) return null;
+    return x;
+  }catch(e){ return null; }
+}
+function buildCalSrc(){
+  const x = parseCalUrl(calCfg.url);
+  if(!x) return '';
+  x.searchParams.set('hl','pl');
+  x.searchParams.set('ctz','Europe/Warsaw');
+  x.searchParams.set('wkst','2');
+  x.searchParams.set('mode', calCfg.mode || 'AGENDA');
+  x.searchParams.set('showTitle','0');
+  x.searchParams.set('showPrint','0');
+  x.searchParams.set('showTabs','0');
+  x.searchParams.set('showCalendars','0');
+  x.searchParams.set('showTz','0');
+  return x.toString();
+}
+function loadCalLocal(){
+  try{ const c = JSON.parse(localStorage.getItem(CAL_LS)||'null'); if(c) calCfg = {url:c.url||'', mode:c.mode||'AGENDA'}; }catch(e){}
+}
+function toggleCalSetup(show){
+  const el = document.getElementById('cal-setup');
+  const on = typeof show==='boolean' ? show : el.style.display==='none';
+  el.style.display = on ? 'block' : 'none';
+  if(on){
+    document.getElementById('cal-url').value = calCfg.url || '';
+    document.getElementById('cal-mode').value = calCfg.mode || 'AGENDA';
+  }
+}
+function renderCalendar(){
+  const frame = document.getElementById('cal-frame');
+  if(!frame) return;
+  const src = buildCalSrc();
+  document.getElementById('cal-empty').style.display = src ? 'none' : 'block';
+  document.getElementById('cal-note').style.display = src ? 'block' : 'none';
+  frame.style.display = src ? 'block' : 'none';
+  if(src && src!==calLoadedSrc){ frame.src = src; calLoadedSrc = src; }
+  if(!src && calLoadedSrc){ frame.removeAttribute('src'); calLoadedSrc = ''; }
+}
+async function persistCal(){
+  try{ localStorage.setItem(CAL_LS, JSON.stringify(calCfg)); }catch(e){}
+  if(firestoreReady){
+    try{ await db.collection('ustawienia').doc('kalendarz').set(calCfg); }catch(e){ console.error(e); }
+  }
+}
+async function saveCal(){
+  const raw = document.getElementById('cal-url').value;
+  const x = parseCalUrl(raw);
+  if(!x){ alert('To nie wygląda na adres osadzenia Kalendarza Google (powinien zaczynać się od https://calendar.google.com/calendar/embed…). Skopiuj cały „Kod do umieszczenia na stronie”.'); return; }
+  calCfg = {url: x.toString(), mode: document.getElementById('cal-mode').value};
+  await persistCal();
+  toggleCalSetup(false);
+  renderCalendar();
+}
+async function clearCal(){
+  if(!confirm('Odłączyć kalendarz?')) return;
+  calCfg = {url:'', mode:'AGENDA'};
+  await persistCal();
+  toggleCalSetup(false);
+  renderCalendar();
+}
+
+/* =========================================================
    RAPORT
    ========================================================= */
 function fillReportSelects(){
@@ -1788,7 +2027,7 @@ async function saveClient(){
   // synchronizacja nazwy klienta w powiązanych sprawach
   if(editingClientId && old.nazwa !== nazwa){
     for(const s of sprawy.filter(x=>x.klientId===id)){
-      await upsertDoc('sprawy', s.id, {klient: nazwa});
+      await upsertDoc('sprawy', s.id, {klient: nazwa, client: nazwa});
     }
   }
   closeClientForm();
@@ -1967,6 +2206,13 @@ async function saveCase(){
     status: document.getElementById('cf-status').value,
     stawka: document.getElementById('cf-stawka').value === '' ? null : Number(document.getElementById('cf-stawka').value),
     pola: readExtraRows(),
+    // pola zgodne z aplikacją Rozliczenia
+    client: document.getElementById('cf-klient').value.trim(),
+    matter: nazwa,
+    category: RODZAJ_TO_CAT[document.getElementById('cf-rodzaj').value] || 'inne',
+    note: document.getElementById('cf-notatka').value.trim(),
+    archived: document.getElementById('cf-status').value === 'archiwum',
+    createdAt: editingCaseId ? ((sprawy.find(s=>s.id===editingCaseId)||{}).createdAt || Date.now()) : Date.now(),
     utworzono: editingCaseId ? (sprawy.find(s=>s.id===editingCaseId)||{}).utworzono || Date.now() : Date.now()
   };
   const id = editingCaseId || uid();
