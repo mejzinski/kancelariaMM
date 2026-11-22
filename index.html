@@ -150,6 +150,8 @@ button.primary{
   font-weight:500;
   display:inline-flex;
   align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
   gap:6px;
 }
 button.primary:hover{background:#6a2222;}
@@ -463,7 +465,46 @@ label{
 .login-err{color:var(--burgundy);font-size:13px;min-height:18px;margin:6px 0 10px;}
 .login-link{background:none;border:0;padding:0;color:var(--ink-soft);font-size:12.5px;text-decoration:underline;cursor:pointer;margin-top:14px;}
 nav.side .logout-btn{margin-top:10px;font-size:12.5px;color:var(--navy-soft);}
-body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !important;}
+body.locked #app, body.locked .mobile-nav, body.locked .fab, body.locked #timer-chip{display:none !important;}
+#timer-chip{
+  position:fixed;top:12px;right:14px;z-index:60;display:none;
+  background:var(--burgundy);color:#fff;border-radius:22px;padding:8px 14px;
+  font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);
+}
+#timer-chip.on{display:block;}
+#timer-chip .mono{font-weight:600;}
+.timer-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.timer-display{font-size:34px;font-weight:500;letter-spacing:1px;}
+.mic-btn{
+  all:unset;box-sizing:border-box;cursor:pointer;margin-top:6px;
+  font-size:12.5px;color:var(--ink-soft);border:1px solid var(--line);
+  border-radius:16px;padding:5px 12px;background:var(--paper-raised);
+}
+.mic-btn.rec{background:var(--burgundy);color:#fff;border-color:var(--burgundy);}
+.seg{display:flex;gap:0;margin:8px 0 14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.seg button{all:unset;box-sizing:border-box;flex:1;text-align:center;padding:10px;cursor:pointer;font-size:14px;color:var(--ink-soft);}
+.seg button.active{background:var(--burgundy);color:#fff;font-weight:500;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.chips .chip{all:unset;box-sizing:border-box;cursor:pointer;font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:16px;background:var(--paper-raised);}
+.chips .chip.active{background:var(--gold-soft);border-color:var(--gold);color:var(--gold);}
+.chips input[type=date]{width:auto;padding:6px 10px;}
+.badge.due-over{background:var(--burgundy-soft);color:var(--burgundy);}
+.badge.due-soon{background:var(--gold-soft);color:var(--gold);}
+.stat-row{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px;}
+.stat{flex:1;min-width:110px;background:var(--gold-soft);border-radius:8px;padding:10px 12px;}
+.stat .v{font-size:17px;font-weight:600;margin-top:2px;}
+.stat .l{font-size:11.5px;color:var(--ink-soft);}
+.rp-block{margin-bottom:22px;}
+.rp-block h3{margin:0 0 2px;font-size:16px;}
+.rp-block .rp-sub{color:var(--ink-soft);font-size:12.5px;margin-bottom:8px;}
+table.rp{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.rp th,table.rp td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+table.rp th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);}
+table.rp td.r,table.rp th.r{text-align:right;white-space:nowrap;}
+details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bottom:10px;}
+@media (max-width:780px){
+  #timer-chip{top:auto;bottom:140px;right:14px;}
+}
 
 /* mobile bottom nav */
 .mobile-nav{display:none;}
@@ -476,7 +517,8 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
     background:var(--navy);
     padding:8px 8px calc(8px + env(safe-area-inset-bottom));
     z-index:40;
-    justify-content:space-around;
+    justify-content:flex-start;
+    overflow-x:auto;
   }
   .mobile-nav button{
     all:unset;cursor:pointer;
@@ -485,7 +527,7 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
     display:flex;flex-direction:column;
     align-items:center;gap:3px;
     padding:6px 10px;
-    flex:1;
+    flex:1 0 66px;
   }
   .mobile-nav button.active{color:#fff;}
   .mobile-nav .ic{font-size:18px;}
@@ -537,6 +579,7 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
     <button data-view="klienci" class="nav-btn"><span>Klienci</span></button>
     <button data-view="sprawy" class="nav-btn"><span>Sprawy</span></button>
     <button data-view="czynnosci" class="nav-btn"><span>Czynności</span></button>
+    <button data-view="raport" class="nav-btn"><span>Raport</span></button>
     <button data-view="archiwum" class="nav-btn"><span>Archiwum</span></button>
     <div class="spacer"></div>
     <div class="sync-status"><span class="dot off" id="sync-dot"></span><span id="sync-text">łączenie…</span></div>
@@ -565,6 +608,7 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
               <option value="do_napisania">Do napisania</option>
               <option value="drobne">Drobne (telefony itp.)</option>
               <option value="do_zlecenia">Do zlecenia pracownikowi</option>
+              <option value="notatka">Notatka</option>
             </select>
           </div>
           <div class="field">
@@ -576,6 +620,7 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
             </select>
           </div>
         </div>
+        <div class="field"><label>Termin (opcjonalnie)</label><input type="date" id="tf-termin"></div>
         <div class="field">
           <label>Powiąż ze sprawą (opcjonalnie)</label>
           <div class="autocomplete-wrap">
@@ -756,6 +801,16 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
         <div><h1>Czynności</h1><div class="sub">Szybka ewidencja tego, co właśnie zrobiłeś</div></div>
       </div>
 
+      <div class="panel form-panel" id="timer-panel">
+        <h3>Stoper</h3>
+        <div class="timer-row">
+          <div class="timer-display mono" id="timer-display">00:00:00</div>
+          <button class="primary" id="timer-start" onclick="startTimer()">▶ Start</button>
+          <button class="primary" id="timer-stop" onclick="stopTimer()" style="display:none;">■ Stop i zapisz</button>
+        </div>
+        <div style="color:var(--ink-soft);font-size:12.5px;margin-top:10px;">Włącz przy rozmowie lub analizie. Po zatrzymaniu opiszesz czynność i wybierzesz klienta oraz sprawę. Stoper działa dalej, nawet gdy zamkniesz apkę.</div>
+      </div>
+
       <div class="panel form-panel">
         <h3>Zapisz czynność</h3>
         <div class="field">
@@ -779,6 +834,37 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
       <div class="act-list" id="act-list"></div>
     </section>
 
+    <!-- RAPORT -->
+    <section class="view" id="view-raport">
+      <div class="view-header">
+        <div><h1>Raport</h1><div class="sub">Zestawienie czynności dla klienta za wybrany okres</div></div>
+      </div>
+      <div class="panel form-panel">
+        <div class="grid2">
+          <div class="field"><label>Klient</label><select id="rp-klient" onchange="onReportClientChange()"></select></div>
+          <div class="field"><label>Sprawa</label><select id="rp-sprawa" onchange="renderReport()"></select></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Od</label><input type="date" id="rp-od" onchange="renderReport()"></div>
+          <div class="field"><label>Do</label><input type="date" id="rp-do" onchange="renderReport()"></div>
+        </div>
+        <div class="chips" style="margin-bottom:12px;">
+          <button type="button" class="chip" onclick="setReportPeriod('month')">Ten miesiąc</button>
+          <button type="button" class="chip" onclick="setReportPeriod('prev')">Poprzedni miesiąc</button>
+          <button type="button" class="chip" onclick="setReportPeriod('year')">Ten rok</button>
+          <button type="button" class="chip" onclick="setReportPeriod('all')">Cały okres</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;margin-bottom:8px;">
+          <input type="checkbox" id="rp-open" style="width:auto;" onchange="renderReport()"> Tylko czynności do rozliczenia
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;">
+          <input type="checkbox" id="rp-kwoty" style="width:auto;" onchange="renderReport()"> Pokaż kwoty (godziny × stawka) — na PDF dla klienta zwykle wyłączone
+        </label>
+      </div>
+      <div id="rp-out"></div>
+      <div id="rp-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+    </section>
+
     <!-- ARCHIWUM -->
     <section class="view" id="view-archiwum">
       <div class="view-header">
@@ -795,6 +881,7 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
   <button data-view="klienci" class="mnav-btn"><span class="ic">☻</span>Klienci</button>
   <button data-view="sprawy" class="mnav-btn"><span class="ic">▤</span>Sprawy</button>
   <button data-view="czynnosci" class="mnav-btn"><span class="ic">✎</span>Czynności</button>
+  <button data-view="raport" class="mnav-btn"><span class="ic">≡</span>Raport</button>
   <button data-view="archiwum" class="mnav-btn"><span class="ic">▦</span>Archiwum</button>
 </div>
 
@@ -806,12 +893,82 @@ body.locked #app, body.locked .mobile-nav, body.locked .fab{display:none !import
     <button class="modal-close" onclick="closeClientModal()">×</button>
     <h2 id="clm-nazwa"></h2>
     <div class="modal-meta" id="clm-meta"></div>
-    <div id="clm-details"></div>
+    <div id="clm-summary"></div>
+    <div id="clm-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;"></div>
     <div class="divider"></div>
     <div class="section-label">Sprawy klienta</div>
     <div id="clm-cases"></div>
+    <div class="divider"></div>
+    <div class="section-label">Otwarte zadania</div>
+    <div id="clm-tasks"></div>
+    <div class="divider"></div>
+    <div class="section-label">Notatki</div>
+    <div id="clm-notes"></div>
+    <div class="divider"></div>
+    <div class="section-label">Ostatnie czynności</div>
+    <div id="clm-acts"></div>
+    <div class="divider"></div>
+    <details class="cl-det" open><summary>Dane klienta</summary><div id="clm-details"></div></details>
   </div>
 </div>
+
+<!-- Timer save modal -->
+<div class="modal-overlay" id="timer-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeTimerModal()">×</button>
+    <h2>Zapisz czas</h2>
+    <div class="modal-meta" id="tm-meta"></div>
+    <div class="field"><label>Czas (minuty)</label><input type="number" id="tm-czas" min="1"></div>
+    <div class="field"><label>Opis czynności</label><textarea id="tm-opis" rows="3" placeholder="np. Rozmowa z klientem ws. ugody"></textarea></div>
+    <div class="grid2">
+      <div class="field"><label>Klient</label><select id="tm-klient" onchange="onTmClientChange()"></select></div>
+      <div class="field"><label>Sprawa</label><select id="tm-sprawa" onchange="onTmCasePick()"></select></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Data</label><input type="date" id="tm-data"></div>
+      <div class="field"><label>Stawka (zł/h) — puste = ze sprawy</label><input type="number" id="tm-stawka" min="0" step="1"></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+      <button class="primary" onclick="saveTimerActivity()">Zapisz czynność</button>
+      <button class="ghost" onclick="closeTimerModal()">Wróć do liczenia</button>
+      <button class="ghost" onclick="discardTimer()">Odrzuć czas</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quick add modal -->
+<div class="modal-overlay" id="quick-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeQuick()">×</button>
+    <h2>Szybki zapis</h2>
+    <div class="seg">
+      <button type="button" class="active" id="q-seg-zadanie" onclick="setQuickType('zadanie')">Zadanie</button>
+      <button type="button" id="q-seg-notatka" onclick="setQuickType('notatka')">Notatka</button>
+    </div>
+    <div class="field"><textarea id="q-tresc" rows="4" placeholder="Co zapisać?"></textarea></div>
+    <div id="q-zadanie-opts">
+      <div class="field"><label>Termin</label>
+        <div class="chips">
+          <button type="button" class="chip" id="q-d0" onclick="setQuickDate(0)">Dziś</button>
+          <button type="button" class="chip" id="q-d1" onclick="setQuickDate(1)">Jutro</button>
+          <button type="button" class="chip" id="q-d2" onclick="setQuickDate(2)">Pojutrze</button>
+          <input type="date" id="q-termin" onchange="markQuickChips()">
+        </div>
+      </div>
+      <div class="field"><label>Priorytet</label>
+        <select id="q-prio"><option value="wysoki">Wysoki</option><option value="sredni" selected>Średni</option><option value="niski">Niski</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Sprawa (opcjonalnie)</label><select id="q-sprawa"></select></div>
+    <div style="color:var(--ink-soft);font-size:12px;margin-bottom:12px;">Dyktowanie: możesz też użyć ikony mikrofonu na klawiaturze telefonu.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="primary" onclick="saveQuick()">Zapisz</button>
+      <button class="ghost" onclick="startTimerFromQuick()">⏱ Start stopera</button>
+    </div>
+  </div>
+</div>
+
+<div id="timer-chip" onclick="stopTimer()">⏱ <span class="mono" id="timer-chip-time">00:00:00</span> · Stop</div>
 
 <!-- Case detail modal -->
 <div class="modal-overlay" id="case-modal">
@@ -976,6 +1133,11 @@ function wipeLocalData(){
   sprawy = []; klienci = []; zadania = []; czynnosci = [];
   Object.values(LS_KEYS).forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
 }
+function initExtras(){
+  ['q-tresc','tm-opis','tf-tresc','af-opis'].forEach(attachMic);
+  loadTimer();
+  setReportPeriod('month');
+}
 function startAuth(){
   if(!firestoreReady || !auth){
     // brak Firebase: tryb lokalny bez logowania
@@ -1010,13 +1172,7 @@ function switchView(view){
 document.querySelectorAll('.nav-btn, .mnav-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>switchView(btn.dataset.view));
 });
-document.getElementById('fab-btn').addEventListener('click', ()=>{
-  const activeView = document.querySelector('.view.active').id;
-  if(activeView === 'view-zadania') openTaskForm();
-  else if(activeView === 'view-klienci') openClientForm();
-  else if(activeView === 'view-sprawy') openCaseForm();
-  else if(activeView === 'view-czynnosci') document.getElementById('af-opis').focus();
-});
+document.getElementById('fab-btn').addEventListener('click', ()=>openQuick());
 
 /* =========================================================
    ZADANIA (tasks)
@@ -1025,9 +1181,10 @@ const KATEGORIE_LABELS = {
   wazne_pilne: 'Ważne / pilne',
   do_napisania: 'Do napisania',
   drobne: 'Drobne',
-  do_zlecenia: 'Do zlecenia pracownikowi'
+  do_zlecenia: 'Do zlecenia pracownikowi',
+  notatka: 'Notatki'
 };
-const KATEGORIE_ORDER = ['wazne_pilne','do_napisania','drobne','do_zlecenia'];
+const KATEGORIE_ORDER = ['wazne_pilne','do_napisania','drobne','do_zlecenia','notatka'];
 
 let editingTaskId = null;
 let tfSelectedCaseId = null;
@@ -1039,6 +1196,7 @@ function openTaskForm(prefillCaseId){
   document.getElementById('tf-tresc').value = '';
   document.getElementById('tf-kategoria').value = 'wazne_pilne';
   document.getElementById('tf-priorytet').value = 'sredni';
+  document.getElementById('tf-termin').value = '';
   document.getElementById('tf-sprawa-search').value = '';
   renderTfSelectedCase();
   document.getElementById('task-form-panel').style.display = 'block';
@@ -1056,6 +1214,7 @@ function editTask(id){
   document.getElementById('tf-tresc').value = t.tresc || '';
   document.getElementById('tf-kategoria').value = t.kategoria || 'wazne_pilne';
   document.getElementById('tf-priorytet').value = t.priorytet || 'sredni';
+  document.getElementById('tf-termin').value = t.termin || '';
   renderTfSelectedCase();
   document.getElementById('task-form-panel').style.display = 'block';
   window.scrollTo({top:0, behavior:'smooth'});
@@ -1075,6 +1234,7 @@ async function saveTask(){
     tresc,
     kategoria: document.getElementById('tf-kategoria').value,
     priorytet: document.getElementById('tf-priorytet').value,
+    termin: document.getElementById('tf-termin').value || null,
     sprawaId: tfSelectedCaseId || null,
     status: editingTaskId ? (zadania.find(t=>t.id===editingTaskId)||{}).status || 'aktywne' : 'aktywne',
     utworzono: editingTaskId ? (zadania.find(t=>t.id===editingTaskId)||{}).utworzono || Date.now() : Date.now()
@@ -1098,23 +1258,44 @@ async function deleteTask(id){
   await deleteDoc('zadania', id);
 }
 
+function isoDate(d){ return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function isoPlusDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return isoDate(d); }
 function renderTaskGroups(){
   const container = document.getElementById('task-groups');
   const active = zadania.filter(t=>t.status!=='zrobione');
+  const tomorrow = isoPlusDays(1);
+  const soon = active.filter(t=>t.termin && t.termin<=tomorrow && t.kategoria!=='notatka')
+    .sort((a,b)=>(a.termin<b.termin?-1:a.termin>b.termin?1:0) || prioRank(b.priorytet)-prioRank(a.priorytet));
+  const soonIds = new Set(soon.map(t=>t.id));
   container.innerHTML = '';
+  if(soon.length){
+    const g = document.createElement('div');
+    g.className = 'task-group';
+    g.innerHTML = `<h2>Na dziś i jutro <span class="count">${soon.length}</span></h2>`;
+    soon.forEach(t=>g.appendChild(taskItemEl(t)));
+    container.appendChild(g);
+  }
   KATEGORIE_ORDER.forEach(kat=>{
-    const items = active.filter(t=>t.kategoria===kat)
+    const items = active.filter(t=>t.kategoria===kat && !soonIds.has(t.id))
       .sort((a,b)=>prioRank(b.priorytet)-prioRank(a.priorytet) || a.utworzono-b.utworzono);
     const group = document.createElement('div');
     group.className = 'task-group';
     group.innerHTML = `<h2>${KATEGORIE_LABELS[kat]} <span class="count">${items.length}</span></h2>`;
     if(items.length===0){
-      group.innerHTML += `<div class="empty">Brak zadań w tej kategorii</div>`;
+      group.innerHTML += `<div class="empty">${kat==='notatka'?'Brak notatek':'Brak zadań w tej kategorii'}</div>`;
     }else{
       items.forEach(t=> group.appendChild(taskItemEl(t)) );
     }
     container.appendChild(group);
   });
+}
+function dueBadge(t){
+  if(!t.termin) return '';
+  const today = isoPlusDays(0), tomorrow = isoPlusDays(1);
+  if(t.termin < today) return `<span class="badge due-over">zaległe · ${formatDatePl(t.termin)}</span>`;
+  if(t.termin === today) return `<span class="badge due-soon">dziś</span>`;
+  if(t.termin === tomorrow) return `<span class="badge due-soon">jutro</span>`;
+  return `<span class="badge">${formatDatePl(t.termin)}</span>`;
 }
 function prioRank(p){ return p==='wysoki'?3:p==='sredni'?2:1; }
 
@@ -1128,6 +1309,7 @@ function taskItemEl(t){
       <div class="task-text">${escapeHtml(t.tresc)}</div>
       <div class="task-meta">
         <span class="badge prio-${t.priorytet}">${t.priorytet==='wysoki'?'Wysoki':t.priorytet==='sredni'?'Średni':'Niski'}</span>
+        ${dueBadge(t)}
         ${c ? `<span class="badge case-link" onclick="openCaseModal('${c.id}')">${escapeHtml(c.nazwa)}</span>` : ''}
       </div>
     </div>
@@ -1158,6 +1340,354 @@ document.getElementById('tf-sprawa-search').addEventListener('input', e=>{
     renderTfSelectedCase();
   });
 });
+
+/* =========================================================
+   POMOCNICZE: klient ↔ sprawy
+   ========================================================= */
+function clientCases(c){
+  return sprawy.filter(s=>s.klientId===c.id || (!s.klientId && s.klient && s.klient.trim().toLowerCase()===(c.nazwa||'').trim().toLowerCase()));
+}
+function caseClientName(s){
+  const k = s.klientId ? klienci.find(x=>x.id===s.klientId) : null;
+  return (k && k.nazwa) || s.klient || '— bez klienta —';
+}
+function isActiveCase(s){ const st=s.status||'w_toku'; return st==='w_toku'||st==='zawieszona'; }
+function clientOptionsHtml(placeholder, selected){
+  return `<option value="">${placeholder}</option>` + klienci
+    .filter(c=>(c.status||'aktywny')==='aktywny' || c.id===selected)
+    .sort((a,b)=>(a.nazwa||'').localeCompare(b.nazwa||'','pl'))
+    .map(c=>`<option value="${c.id}">${escapeHtml(c.nazwa)}</option>`).join('');
+}
+function caseOptionsHtml(list, placeholder){
+  return `<option value="">${placeholder}</option>` + list
+    .sort((a,b)=>(a.nazwa||'').localeCompare(b.nazwa||'','pl'))
+    .map(c=>`<option value="${c.id}">${escapeHtml(c.nazwa)}${c.klient?' — '+escapeHtml(c.klient):''}</option>`).join('');
+}
+function casesForPicker(klientId, includeId){
+  let list;
+  if(klientId){ const k=klienci.find(x=>x.id===klientId); list = k ? clientCases(k) : []; }
+  else list = sprawy.slice();
+  return list.filter(s=>isActiveCase(s) || s.id===includeId);
+}
+
+/* =========================================================
+   DYKTOWANIE
+   ========================================================= */
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog = null, recogKeep = false;
+function attachMic(id){
+  if(!SpeechRec) return;
+  const ta = document.getElementById(id);
+  if(!ta) return;
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'mic-btn'; b.textContent = '🎤 Dyktuj';
+  b.onclick = ()=>toggleDictation(ta, b);
+  ta.insertAdjacentElement('afterend', b);
+}
+function toggleDictation(ta, b){
+  if(recog){ recogKeep = false; try{recog.stop();}catch(e){} return; }
+  const r = new SpeechRec();
+  r.lang = 'pl-PL'; r.interimResults = false; r.continuous = false;
+  recogKeep = true;
+  b.textContent = '⏹ Słucham… (dotknij, aby zakończyć)'; b.classList.add('rec');
+  r.onresult = e=>{
+    let t = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) t += e.results[i][0].transcript; }
+    t = t.trim();
+    if(t){ ta.value = (ta.value ? ta.value.replace(/\s+$/,'') + ' ' : '') + t; }
+  };
+  r.onerror = ev=>{
+    if(ev.error==='not-allowed' || ev.error==='service-not-allowed'){
+      recogKeep = false;
+      alert('Brak zgody na mikrofon. Zezwól na dostęp do mikrofonu dla tej strony w ustawieniach przeglądarki.');
+    }
+  };
+  r.onend = ()=>{
+    if(recogKeep){ try{ r.start(); return; }catch(e){} }
+    recog = null; b.textContent = '🎤 Dyktuj'; b.classList.remove('rec');
+  };
+  recog = r;
+  try{ r.start(); }catch(e){ recog = null; recogKeep = false; b.textContent = '🎤 Dyktuj'; b.classList.remove('rec'); }
+}
+
+/* =========================================================
+   STOPER
+   ========================================================= */
+const TIMER_KEY = 'k_timer';
+let timerStart = null;
+function loadTimer(){
+  try{ const t = JSON.parse(localStorage.getItem(TIMER_KEY)||'null'); timerStart = t && t.start ? t.start : null; }catch(e){ timerStart = null; }
+  updateTimerUI();
+}
+function fmtHMS(ms){
+  const t = Math.max(0, Math.floor(ms/1000));
+  const h = String(Math.floor(t/3600)).padStart(2,'0');
+  const m = String(Math.floor(t%3600/60)).padStart(2,'0');
+  const sec = String(t%60).padStart(2,'0');
+  return `${h}:${m}:${sec}`;
+}
+function updateTimerUI(){
+  const running = !!timerStart;
+  const txt = running ? fmtHMS(Date.now()-timerStart) : '00:00:00';
+  document.getElementById('timer-display').textContent = txt;
+  document.getElementById('timer-chip-time').textContent = txt;
+  document.getElementById('timer-chip').classList.toggle('on', running);
+  document.getElementById('timer-start').style.display = running ? 'none' : '';
+  document.getElementById('timer-stop').style.display = running ? '' : 'none';
+}
+setInterval(()=>{ if(timerStart) updateTimerUI(); }, 1000);
+function startTimer(){
+  if(timerStart) return;
+  timerStart = Date.now();
+  try{ localStorage.setItem(TIMER_KEY, JSON.stringify({start:timerStart})); }catch(e){}
+  updateTimerUI();
+}
+function startTimerFromQuick(){ closeQuick(); startTimer(); }
+function stopTimer(){
+  if(!timerStart) return;
+  const elapsed = Date.now()-timerStart;
+  const min = Math.max(1, Math.round(elapsed/60000));
+  document.getElementById('tm-meta').textContent = `Zmierzony czas: ${fmtHMS(elapsed)}. Możesz go poprawić.`;
+  document.getElementById('tm-czas').value = min;
+  document.getElementById('tm-opis').value = '';
+  document.getElementById('tm-data').value = isoPlusDays(0);
+  document.getElementById('tm-stawka').value = '';
+  document.getElementById('tm-klient').innerHTML = clientOptionsHtml('— wybierz klienta —');
+  document.getElementById('tm-sprawa').innerHTML = caseOptionsHtml(casesForPicker(''), '— wybierz sprawę —');
+  document.getElementById('timer-modal').classList.add('active');
+}
+function closeTimerModal(){ document.getElementById('timer-modal').classList.remove('active'); }
+function onTmClientChange(){
+  const kid = document.getElementById('tm-klient').value;
+  document.getElementById('tm-sprawa').innerHTML = caseOptionsHtml(casesForPicker(kid), '— wybierz sprawę —');
+  const list = casesForPicker(kid);
+  if(kid && list.length===1) document.getElementById('tm-sprawa').value = list[0].id;
+}
+function onTmCasePick(){
+  const sid = document.getElementById('tm-sprawa').value;
+  const c = sprawy.find(x=>x.id===sid);
+  if(c && c.klientId){ document.getElementById('tm-klient').value = c.klientId; }
+}
+function discardTimer(){
+  if(!confirm('Odrzucić zmierzony czas bez zapisywania?')) return;
+  clearTimer(); closeTimerModal();
+}
+function clearTimer(){
+  timerStart = null;
+  try{ localStorage.removeItem(TIMER_KEY); }catch(e){}
+  updateTimerUI();
+}
+async function saveTimerActivity(){
+  const sid = document.getElementById('tm-sprawa').value;
+  const opis = document.getElementById('tm-opis').value.trim();
+  const czas = Number(document.getElementById('tm-czas').value);
+  if(!sid){ alert('Wybierz sprawę (najpierw klienta, jeśli chcesz zawęzić listę).'); return; }
+  if(!opis){ alert('Opisz czynność.'); return; }
+  if(!czas || czas<=0){ alert('Podaj czas w minutach.'); return; }
+  const st = document.getElementById('tm-stawka').value;
+  await upsertDoc('czynnosci', uid(), {
+    sprawaId: sid, opis, czas, data: document.getElementById('tm-data').value || isoPlusDays(0),
+    stawka: st==='' ? null : Number(st), rozliczono:false, zrodlo:'stoper', utworzono: Date.now()
+  });
+  clearTimer(); closeTimerModal();
+}
+
+/* =========================================================
+   SZYBKI ZAPIS (przycisk +)
+   ========================================================= */
+let quickType = 'zadanie';
+function openQuick(){
+  document.getElementById('q-tresc').value = '';
+  document.getElementById('q-prio').value = 'sredni';
+  document.getElementById('q-sprawa').innerHTML = caseOptionsHtml(sprawy.filter(isActiveCase), '— bez sprawy —');
+  setQuickType('zadanie');
+  setQuickDate(1);
+  document.getElementById('quick-modal').classList.add('active');
+  setTimeout(()=>document.getElementById('q-tresc').focus(), 50);
+}
+function closeQuick(){ document.getElementById('quick-modal').classList.remove('active'); }
+function setQuickType(t){
+  quickType = t;
+  document.getElementById('q-seg-zadanie').classList.toggle('active', t==='zadanie');
+  document.getElementById('q-seg-notatka').classList.toggle('active', t==='notatka');
+  document.getElementById('q-zadanie-opts').style.display = t==='zadanie' ? '' : 'none';
+  document.getElementById('q-tresc').placeholder = t==='zadanie' ? 'np. Zadzwonić do klienta ws. terminu rozprawy' : 'Notatka (np. ustalenia z rozmowy z klientem)';
+}
+function setQuickDate(n){ document.getElementById('q-termin').value = isoPlusDays(n); markQuickChips(); }
+function markQuickChips(){
+  const v = document.getElementById('q-termin').value;
+  [0,1,2].forEach(n=>document.getElementById('q-d'+n).classList.toggle('active', v===isoPlusDays(n)));
+}
+async function saveQuick(){
+  const tresc = document.getElementById('q-tresc').value.trim();
+  if(!tresc){ alert('Wpisz lub podyktuj treść.'); return; }
+  const sid = document.getElementById('q-sprawa').value || null;
+  const payload = quickType==='zadanie'
+    ? { tresc, kategoria:'drobne', priorytet: document.getElementById('q-prio').value, termin: document.getElementById('q-termin').value || null, sprawaId: sid, status:'aktywne', utworzono: Date.now() }
+    : { tresc, kategoria:'notatka', priorytet:'sredni', termin:null, sprawaId: sid, status:'aktywne', utworzono: Date.now() };
+  await upsertDoc('zadania', uid(), payload);
+  closeQuick();
+}
+
+/* =========================================================
+   RAPORT
+   ========================================================= */
+function fillReportSelects(){
+  const ks = document.getElementById('rp-klient');
+  if(!ks) return;
+  const curK = ks.value;
+  ks.innerHTML = clientOptionsHtml('— wszyscy klienci —', curK);
+  ks.value = curK;
+  fillReportCases();
+}
+function fillReportCases(){
+  const kid = document.getElementById('rp-klient').value;
+  const ss = document.getElementById('rp-sprawa');
+  const cur = ss.value;
+  let list;
+  if(kid){ const k=klienci.find(x=>x.id===kid); list = k ? clientCases(k) : []; } else list = sprawy.slice();
+  ss.innerHTML = caseOptionsHtml(list, '— wszystkie sprawy —');
+  ss.value = list.some(x=>x.id===cur) ? cur : '';
+}
+function onReportClientChange(){ fillReportCases(); renderReport(); }
+function setReportPeriod(kind){
+  const now = new Date();
+  let from='', to=isoPlusDays(0);
+  if(kind==='month'){ from = isoDate(new Date(now.getFullYear(), now.getMonth(), 1)); }
+  else if(kind==='prev'){ from = isoDate(new Date(now.getFullYear(), now.getMonth()-1, 1)); to = isoDate(new Date(now.getFullYear(), now.getMonth(), 0)); }
+  else if(kind==='year'){ from = isoDate(new Date(now.getFullYear(), 0, 1)); }
+  else { from=''; to=''; }
+  document.getElementById('rp-od').value = from;
+  document.getElementById('rp-do').value = to;
+  renderReport();
+}
+function reportData(){
+  const kid = document.getElementById('rp-klient').value;
+  const sid = document.getElementById('rp-sprawa').value;
+  const from = document.getElementById('rp-od').value;
+  const to = document.getElementById('rp-do').value;
+  const onlyOpen = document.getElementById('rp-open').checked;
+  let cases;
+  if(sid){ const c=sprawy.find(x=>x.id===sid); cases = c?[c]:[]; }
+  else if(kid){ const k=klienci.find(x=>x.id===kid); cases = k ? clientCases(k) : []; }
+  else cases = sprawy.slice();
+  const groupsMap = new Map();
+  let totalMin=0, totalPln=0, missingRate=false; const all=[];
+  cases.forEach(c=>{
+    const acts = czynnosci.filter(a=>a.sprawaId===c.id
+        && (!from || (a.data||'')>=from) && (!to || (a.data||'')<=to) && (!onlyOpen || !a.rozliczono))
+      .sort((a,b)=>((a.data||'')<(b.data||'')?-1:(a.data||'')>(b.data||'')?1:0) || (a.utworzono||0)-(b.utworzono||0));
+    if(!acts.length) return;
+    const kn = caseClientName(c);
+    if(!groupsMap.has(kn)) groupsMap.set(kn, []);
+    groupsMap.get(kn).push({c, acts});
+    acts.forEach(a=>{
+      totalMin += Number(a.czas)||0;
+      const r = actRate(a,c); if(r===0) missingRate = true;
+      totalPln += (Number(a.czas)||0)/60*r;
+      all.push(a);
+    });
+  });
+  const groups = [...groupsMap.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pl'))
+    .map(([klient, cs])=>({klient, cases: cs.sort((x,y)=>(x.c.nazwa||'').localeCompare(y.c.nazwa||'','pl'))}));
+  return {groups, all, totalMin, totalPln, missingRate, from, to};
+}
+function periodText(d){
+  return (d.from||d.to) ? `${d.from?formatDatePl(d.from):'początek'} – ${d.to?formatDatePl(d.to):'dziś'}` : 'cały okres';
+}
+function hoursTxt(min){ return `${min} min (${(min/60).toFixed(2)} h)`; }
+function reportBodyHtml(d, showAmt){
+  const multi = d.groups.length>1;
+  return d.groups.map(g=>{
+    const blocks = g.cases.map(({c,acts})=>{
+      const sub = acts.reduce((x,a)=>x+(Number(a.czas)||0),0);
+      const subPln = acts.reduce((x,a)=>x+(Number(a.czas)||0)/60*actRate(a,c),0);
+      const rows = acts.map(a=>`<tr><td style="width:88px;">${formatDatePl(a.data)}</td><td>${escapeHtml(a.opis)}${a.rozliczono?' <span style="color:#888;font-size:11px;">(rozliczone)</span>':''}</td><td class="r">${a.czas} min</td>${showAmt?`<td class="r">${fmtPLN((Number(a.czas)||0)/60*actRate(a,c))}</td>`:''}</tr>`).join('');
+      return `<div class="rp-block"><h3>${escapeHtml(c.nazwa)}</h3>
+        <div class="rp-sub">${escapeHtml(RODZAJ_LABELS[c.rodzaj]||'')}${c.klient&&!multi?'':''}</div>
+        <table class="rp"><thead><tr><th>Data</th><th>Czynność</th><th class="r">Czas</th>${showAmt?'<th class="r">Kwota</th>':''}</tr></thead><tbody>${rows}</tbody></table>
+        <div style="text-align:right;font-weight:600;margin-top:6px;">Razem w sprawie: ${hoursTxt(sub)}${showAmt?' · '+fmtPLN(subPln):''}</div></div>`;
+    }).join('');
+    return (multi?`<h2 style="margin:26px 0 10px;font-size:18px;">${escapeHtml(g.klient)}</h2>`:'') + blocks;
+  }).join('');
+}
+function renderReport(){
+  const out = document.getElementById('rp-out');
+  if(!out) return;
+  const d = reportData();
+  const showAmt = document.getElementById('rp-kwoty').checked;
+  const act = document.getElementById('rp-actions');
+  if(!d.all.length){
+    out.innerHTML = '<div class="empty">Brak czynności spełniających kryteria. Wybierz klienta i okres.</div>';
+    act.innerHTML = ''; return;
+  }
+  out.innerHTML = `<div class="panel" style="padding:18px;">
+    <div class="stat-row">
+      <div class="stat"><div class="l">Okres</div><div class="v" style="font-size:14px;">${periodText(d)}</div></div>
+      <div class="stat"><div class="l">Czynności</div><div class="v">${d.all.length}</div></div>
+      <div class="stat"><div class="l">Łączny czas</div><div class="v mono">${(d.totalMin/60).toFixed(2)} h</div></div>
+      ${showAmt?`<div class="stat"><div class="l">Wynagrodzenie</div><div class="v mono">${fmtPLN(d.totalPln)}</div></div>`:''}
+    </div>
+    ${showAmt && d.missingRate ? '<div style="font-size:12.5px;color:var(--burgundy);margin-bottom:10px;">Część czynności nie ma stawki — ustaw ją w karcie klienta lub sprawy.</div>' : ''}
+    ${reportBodyHtml(d, showAmt)}
+    <div style="text-align:right;font-weight:700;font-size:15px;border-top:2px solid var(--line);padding-top:10px;">Łącznie: ${hoursTxt(d.totalMin)}${showAmt?' · '+fmtPLN(d.totalPln):''}</div>
+  </div>`;
+  act.innerHTML = `<button class="primary" onclick="exportReportPdf()">Drukuj / zapisz jako PDF</button>
+    <button class="ghost" onclick="exportReportCsv()">Pobierz CSV (Excel)</button>
+    <button class="ghost" onclick="markReportSettled()">Oznacz jako rozliczone</button>`;
+}
+function exportReportPdf(){
+  const d = reportData();
+  if(!d.all.length) return;
+  const showAmt = document.getElementById('rp-kwoty').checked;
+  const kid = document.getElementById('rp-klient').value;
+  const kl = kid ? (klienci.find(x=>x.id===kid)||{}).nazwa : (d.groups.length===1 ? d.groups[0].klient : 'wielu klientów');
+  const w = window.open('', '_blank');
+  if(!w){ alert('Przeglądarka zablokowała okno. Zezwól na wyskakujące okna dla tej strony.'); return; }
+  w.document.write(`<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>Zestawienie czynności</title>
+  <style>body{font-family:Georgia,serif;color:#242220;margin:40px;}h1{font-size:21px;margin:0 0 4px;}h2{font-size:17px;}h3{font-size:15px;margin:0 0 6px;}
+  .m{color:#5c584f;font-size:13px;margin-bottom:26px;line-height:1.6;}.rp-block{margin-bottom:22px;}.rp-sub{display:none;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}th,td{padding:7px 6px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top;}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#5c584f;}.r{text-align:right;white-space:nowrap;}</style></head><body>
+  <div style="font-size:12px;color:#5c584f;margin-bottom:10px;">Kancelaria Radcy Prawnego Michał Mejziński</div>
+  <h1>Zestawienie czynności</h1>
+  <div class="m">Klient: ${escapeHtml(kl||'—')}<br>Okres: ${periodText(d)}<br>Data sporządzenia: ${formatDatePl(isoPlusDays(0))}</div>
+  ${reportBodyHtml(d, showAmt)}
+  <div style="text-align:right;font-weight:bold;font-size:14px;margin-top:10px;">Łączny czas pracy: ${hoursTxt(d.totalMin)}${showAmt?' · '+fmtPLN(d.totalPln):''}</div>
+  <script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+function exportReportCsv(){
+  const d = reportData();
+  if(!d.all.length) return;
+  const q = v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const lines = [['Klient','Sprawa','Data','Opis','Czas (min)','Czas (h)','Stawka (zł/h)','Kwota (zł)','Rozliczone'].map(q).join(';')];
+  d.groups.forEach(g=>g.cases.forEach(({c,acts})=>acts.forEach(a=>{
+    const r = actRate(a,c), m = Number(a.czas)||0;
+    lines.push([g.klient,c.nazwa,a.data||'',a.opis,m,(m/60).toFixed(2).replace('.',','),r,(m/60*r).toFixed(2).replace('.',','),a.rozliczono?'tak':'nie'].map(q).join(';'));
+  })));
+  const blob = new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `zestawienie-czynnosci-${isoPlusDays(0)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+async function markReportSettled(){
+  const d = reportData();
+  const todo = d.all.filter(a=>!a.rozliczono);
+  if(!todo.length){ alert('Wszystkie czynności w zestawieniu są już rozliczone.'); return; }
+  if(!confirm(`Oznaczyć ${todo.length} czynności jako rozliczone?`)) return;
+  for(const a of todo){ await upsertDoc('czynnosci', a.id, {...a, rozliczono:true}); }
+  renderReport();
+}
+function openReportForClient(id){
+  closeClientModal();
+  switchView('raport');
+  document.getElementById('rp-klient').value = id;
+  fillReportCases();
+  setReportPeriod('month');
+}
 
 /* =========================================================
    KLIENCI (clients)
@@ -1290,8 +1820,26 @@ function openClientModal(id){
   if(!c) return;
   const f = (label,val)=>`<div><div class="section-label">${label}</div><div>${escapeHtml(val||'—')}</div></div>`;
   const t = c.typ||'osoba';
+  const cs = clientCases(c);
+  const csIds = new Set(cs.map(x=>x.id));
+  const acts = czynnosci.filter(a=>csIds.has(a.sprawaId));
+  const caseById = Object.fromEntries(cs.map(x=>[x.id,x]));
+  const totalMin = acts.reduce((x,a)=>x+(Number(a.czas)||0),0);
+  const open = acts.filter(a=>!a.rozliczono);
+  const openMin = open.reduce((x,a)=>x+(Number(a.czas)||0),0);
+  const openPln = open.reduce((x,a)=>x+(Number(a.czas)||0)/60*actRate(a, caseById[a.sprawaId]||{stawka:c.stawka}),0);
   document.getElementById('clm-nazwa').textContent = c.nazwa;
-  document.getElementById('clm-meta').textContent = [TYP_LABELS[t], (c.status==='archiwum'?'archiwum':'aktywny'), c.stawka?`${c.stawka} zł/h`:''].filter(Boolean).join(' · ');
+  document.getElementById('clm-meta').textContent = [TYP_LABELS[t], (c.status==='archiwum'?'archiwum':'aktywny'), c.stawka?`${c.stawka} zł/h`:'', c.telefon, c.email].filter(Boolean).join(' · ');
+  document.getElementById('clm-summary').innerHTML = `<div class="stat-row">
+    <div class="stat"><div class="l">Sprawy aktywne</div><div class="v">${cs.filter(isActiveCase).length}</div></div>
+    <div class="stat"><div class="l">Czas łącznie</div><div class="v mono">${(totalMin/60).toFixed(1)} h</div></div>
+    <div class="stat"><div class="l">Do rozliczenia</div><div class="v mono">${(openMin/60).toFixed(1)} h</div></div>
+    <div class="stat"><div class="l">Do rozliczenia (zł)</div><div class="v mono">${fmtPLN(openPln)}</div></div></div>`;
+  document.getElementById('clm-actions').innerHTML = `
+    <button class="primary" onclick="openReportForClient('${c.id}')">Raport dla klienta</button>
+    <button class="ghost" onclick="newCaseForClient('${c.id}')">+ Nowa sprawa</button>
+    <button class="ghost" onclick="editClient('${c.id}')">Edytuj</button>
+    <button class="ghost" onclick="deleteClient('${c.id}')">Usuń</button>`;
   const ident = [];
   if(t!=='firma'){ ident.push(f('PESEL',c.pesel)); ident.push(f('Data urodzenia', c.urodzenia?formatDatePl(c.urodzenia):'')); }
   if(t!=='osoba'){ ident.push(f('NIP',c.nip)); ident.push(f('REGON',c.regon)); ident.push(f('KRS / CEIDG',c.krs)); }
@@ -1312,16 +1860,20 @@ function openClientModal(id){
       ${f('Źródło polecenia',c.zrodlo)}
       ${(c.pola||[]).map(p=>f(escapeHtml(p.k||'—'),p.v)).join('')}
     </div>
-    ${c.notatka?`<div style="margin-top:14px;"><div class="section-label">Notatki</div><div style="white-space:pre-wrap;">${escapeHtml(c.notatka)}</div></div>`:''}
-    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="ghost" onclick="editClient('${c.id}')">Edytuj klienta</button>
-      <button class="ghost" onclick="newCaseForClient('${c.id}')">+ Nowa sprawa dla klienta</button>
-      <button class="ghost" onclick="deleteClient('${c.id}')">Usuń</button>
-    </div>`;
-  const cs = sprawy.filter(s=>s.klientId===id || (!s.klientId && s.klient && s.klient.trim().toLowerCase()===(c.nazwa||'').trim().toLowerCase()));
+    ${c.notatka?`<div style="margin-top:14px;"><div class="section-label">Notatki o kliencie</div><div style="white-space:pre-wrap;">${escapeHtml(c.notatka)}</div></div>`:''}`;
   document.getElementById('clm-cases').innerHTML = cs.length
-    ? cs.map(s=>`<div class="activity-row" style="cursor:pointer" onclick="closeClientModal();switchView('sprawy');openCaseModal('${s.id}')"><div class="a-content" style="flex:1">${escapeHtml(s.nazwa)}</div><span class="case-type-tag">${STATUS_LABELS[s.status||'w_toku']}</span></div>`).join('')
+    ? cs.map(x=>`<div class="activity-row" style="cursor:pointer" onclick="closeClientModal();switchView('sprawy');openCaseModal('${x.id}')"><div class="a-content" style="flex:1">${escapeHtml(x.nazwa)}</div><span class="case-type-tag">${STATUS_LABELS[x.status||'w_toku']}</span></div>`).join('')
     : '<div class="empty">Brak spraw powiązanych z tym klientem</div>';
+  const myTasks = zadania.filter(x=>csIds.has(x.sprawaId) && x.status!=='zrobione');
+  const row = x=>`<div class="activity-row"><div class="a-content" style="flex:1">${escapeHtml(x.tresc)}<div class="task-meta" style="margin-top:4px;">${dueBadge(x)}<span class="badge case-link" onclick="closeClientModal();switchView('sprawy');openCaseModal('${x.sprawaId}')">${escapeHtml((caseById[x.sprawaId]||{}).nazwa||'')}</span></div></div></div>`;
+  const tasks = myTasks.filter(x=>x.kategoria!=='notatka').sort((a,b)=>(a.termin||'9999')<(b.termin||'9999')?-1:1);
+  const notes = myTasks.filter(x=>x.kategoria==='notatka');
+  document.getElementById('clm-tasks').innerHTML = tasks.length ? tasks.map(row).join('') : '<div class="empty">Brak otwartych zadań</div>';
+  document.getElementById('clm-notes').innerHTML = notes.length ? notes.map(row).join('') : '<div class="empty">Brak notatek</div>';
+  const last = acts.slice().sort((a,b)=>((b.data||'')<(a.data||'')?-1:(b.data||'')>(a.data||'')?1:0) || (b.utworzono||0)-(a.utworzono||0)).slice(0,8);
+  document.getElementById('clm-acts').innerHTML = last.length
+    ? last.map(a=>`<div class="activity-row"><div class="a-time">${formatDatePl(a.data)}</div><div style="flex:1">${escapeHtml(a.opis)}<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">${escapeHtml((caseById[a.sprawaId]||{}).nazwa||'')}${a.rozliczono?' · rozliczone':''}</div></div><div class="a-dur" style="width:auto;">${a.czas} min</div></div>`).join('')
+    : '<div class="empty">Brak zarejestrowanych czynności</div>';
   document.getElementById('client-modal').classList.add('active');
 }
 function closeClientModal(){ document.getElementById('client-modal').classList.remove('active'); }
@@ -1732,6 +2284,8 @@ function renderAll(){
   renderArchive();
   renderClients();
   fillCaseClientSelect();
+  fillReportSelects();
+  renderReport();
   renderCases();
   renderActivities();
 }
@@ -1739,6 +2293,7 @@ function renderAll(){
 /* =========================================================
    INIT
    ========================================================= */
+initExtras();
 startAuth();
 
 if('serviceWorker' in navigator){
