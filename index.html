@@ -186,6 +186,20 @@ input,select,textarea{
   color:var(--ink);
   width:100%;
 }
+/* jednolity rozmiar pól i list rozwijanych */
+input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]):not([type=range]):not([type=color]),select{
+  box-sizing:border-box;
+  height:44px;
+  line-height:20px;
+}
+select{
+  -webkit-appearance:none;appearance:none;
+  padding-right:34px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236b6358' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+  text-overflow:ellipsis;
+}
+input[type=date]{min-width:0;}
 input:focus,select:focus,textarea:focus{
   outline:2px solid var(--gold);
   outline-offset:0px;
@@ -775,10 +789,13 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
           </div>
         </div>
         <div class="grid2">
-          <div class="field"><label>Klient</label>
-            <select id="cf-klient-id" onchange="onCaseClientPick()"><option value="">— wybierz z bazy klientów —</option></select>
-            <input id="cf-klient" type="hidden">
-            <div id="cf-klient-legacy" style="display:none;color:var(--ink-soft);font-size:12px;margin-top:6px;"></div>
+          <div>
+            <div class="field"><label>Klient</label>
+              <select id="cf-klient-id" onchange="onCaseClientPick()"><option value="">— wybierz z bazy klientów —</option></select>
+              <input id="cf-klient" type="hidden">
+              <div id="cf-klient-legacy" style="display:none;color:var(--ink-soft);font-size:12px;margin-top:6px;"></div>
+            </div>
+            <div class="field"><label>Adres klienta</label><input id="cf-adres" placeholder="Adres korespondencyjny"></div>
           </div>
           <div>
             <div class="field"><label>Przeciwnik</label><input id="cf-przeciwnik" placeholder="np. ZUS Oddział w Poznaniu"></div>
@@ -790,7 +807,6 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
           <div class="field"><label>Wartość sprawy</label><input id="cf-wartosc" placeholder="np. 25 000 zł"></div>
           <div class="field"><label>Telefon klienta</label><input id="cf-telefon" placeholder="np. 600 000 000"></div>
         </div>
-        <div class="field"><label>Adres klienta</label><input id="cf-adres" placeholder="Adres korespondencyjny"></div>
         <div class="grid2">
           <div>
             <div class="field"><label>Status sprawy</label>
