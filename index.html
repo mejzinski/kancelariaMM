@@ -798,6 +798,17 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
           </div>
           <div class="field"><label>Stawka godzinowa (zł/h)</label><input id="cf-stawka" type="number" min="0" step="1" placeholder="np. 300"></div>
         </div>
+        <div class="section-label" style="margin:18px 0 10px;">Wynagrodzenie (te same dane widzi apka Rozliczenia)</div>
+        <div class="grid2">
+          <div class="field"><label>Kwota ustalonego wynagrodzenia (zł)</label><input id="cf-total" type="number" min="0" step="1" placeholder="np. 5000"></div>
+          <div class="field"><label>Success fee (%)</label><input id="cf-successfee" type="number" min="0" step="0.1" placeholder="np. 5"></div>
+        </div>
+        <div class="field">
+          <label>Harmonogram rat / terminów płatności</label>
+          <div id="cf-rates"></div>
+          <button class="ghost" type="button" onclick="addRateRow()">+ Dodaj ratę / termin</button>
+          <div style="color:var(--ink-soft);font-size:12px;margin-top:8px;line-height:1.5;">Jedna pozycja to jednorazowa płatność z terminem, kilka pozycji to raty. Wpłaty oznaczasz jako opłacone w apce Rozliczenia, tutaj opłacone raty są zablokowane.</div>
+        </div>
         <div class="field">
           <label>Pola dodatkowe</label>
           <div id="cf-extra"></div>
@@ -2181,6 +2192,9 @@ function openCaseForm(){
   document.getElementById('cf-klient-id').value = '';
   document.getElementById('cf-status').value = 'w_toku';
   document.getElementById('cf-stawka').value = '';
+  document.getElementById('cf-total').value = '';
+  document.getElementById('cf-successfee').value = '';
+  fillRateRows(null);
   document.getElementById('cf-extra').innerHTML = '';
   document.getElementById('case-form-panel').style.display = 'block';
   document.getElementById('cf-nazwa').focus();
@@ -2200,6 +2214,44 @@ function readExtraRows(){
     .filter(x=>x.k || x.v);
 }
 function closeCaseForm(){ document.getElementById('case-form-panel').style.display = 'none'; }
+
+/* ---- harmonogram rat (zgodny z aplikacją Rozliczenia: rates[{date,amount,paid}] + payments[{rateIdx}]) ---- */
+function addRateRow(date, amount, paid, oldIdx){
+  const row = document.createElement('div');
+  row.className = 'grid2 rate-row';
+  row.style.marginBottom = '8px';
+  row.dataset.old = (oldIdx===undefined || oldIdx===null) ? '' : String(oldIdx);
+  row.dataset.paid = paid ? '1' : '';
+  row.innerHTML = `<input type="date" class="rt-d" aria-label="Termin płatności">
+    <div style="display:flex;gap:6px;align-items:center;"><input type="number" class="rt-a" min="0" step="1" placeholder="Kwota (zł)" style="flex:1;min-width:0;" aria-label="Kwota raty"><span class="rt-x"></span></div>`;
+  row.querySelector('.rt-d').value = date || '';
+  row.querySelector('.rt-a').value = (amount===undefined || amount===null) ? '' : amount;
+  const x = row.querySelector('.rt-x');
+  if(paid){
+    row.querySelector('.rt-d').disabled = true;
+    row.querySelector('.rt-a').disabled = true;
+    x.innerHTML = '<span class="badge" style="background:var(--sage-soft);color:var(--sage);white-space:nowrap;">✓ opłacona</span>';
+  }else{
+    x.innerHTML = '<button type="button" class="ghost" aria-label="Usuń ratę">✕</button>';
+    x.firstChild.onclick = ()=>row.remove();
+  }
+  document.getElementById('cf-rates').appendChild(row);
+}
+function readRateRows(){
+  return [...document.querySelectorAll('#cf-rates .rate-row')].map(r=>({
+    date: r.querySelector('.rt-d').value,
+    amount: r.querySelector('.rt-a').value === '' ? null : Number(r.querySelector('.rt-a').value),
+    paid: r.dataset.paid === '1',
+    old: r.dataset.old === '' ? null : Number(r.dataset.old)
+  }));
+}
+function fillRateRows(c){
+  document.getElementById('cf-rates').innerHTML = '';
+  const rates = (c && c.rates) || [];
+  rates.forEach((r,i)=>addRateRow(r.date, r.amount, !!r.paid, i));
+  if(!rates.length) addRateRow();
+}
+function paidSum(c){ return (c.payments||[]).reduce((a,p)=>a+(Number(p.amount)||0),0); }
 
 async function saveCase(){
   const nazwa = document.getElementById('cf-nazwa').value.trim();
@@ -2226,6 +2278,20 @@ async function saveCase(){
     createdAt: editingCaseId ? ((sprawy.find(s=>s.id===editingCaseId)||{}).createdAt || Date.now()) : Date.now(),
     utworzono: editingCaseId ? (sprawy.find(s=>s.id===editingCaseId)||{}).utworzono || Date.now() : Date.now()
   };
+  // wynagrodzenie i raty
+  const existing = editingCaseId ? (sprawy.find(s=>s.id===editingCaseId)||{}) : {};
+  const rows = readRateRows();
+  const kept = rows.filter(r=>r.paid || (r.date && r.amount));
+  const idxMap = {}; kept.forEach((r,i)=>{ if(r.old!==null) idxMap[r.old] = i; });
+  payload.rates = kept.map(r=>{ const o = {date:r.date, amount:r.amount}; if(r.paid) o.paid = true; return o; });
+  const tv = document.getElementById('cf-total').value;
+  payload.total = tv==='' ? 0 : Number(tv);
+  const sf = document.getElementById('cf-successfee').value;
+  payload.successFee = sf==='' ? null : Number(sf);
+  // jeśli usunięcie pustego wiersza przesunęło numery rat, przepnij istniejące wpłaty
+  const pays = existing.payments || [];
+  const needRemap = pays.some(p=>p.rateIdx!==undefined && idxMap[p.rateIdx]!==p.rateIdx);
+  if(needRemap) payload.payments = pays.map(p=> p.rateIdx!==undefined && idxMap[p.rateIdx]!==undefined ? {...p, rateIdx: idxMap[p.rateIdx]} : p);
   const id = editingCaseId || uid();
   await upsertDoc('sprawy', id, payload);
   closeCaseForm();
@@ -2278,6 +2344,7 @@ function openCaseModal(id){
       <div><div class="section-label">Adres</div><div>${escapeHtml(c.adres||'—')}</div></div>
     </div>
     ${(c.pola||[]).length ? `<div style="margin-top:14px;" class="grid2">${c.pola.map(p=>`<div><div class="section-label">${escapeHtml(p.k||'—')}</div><div>${escapeHtml(p.v||'—')}</div></div>`).join('')}</div>` : ''}
+    ${feeBlockHtml(c)}
     ${c.notatka ? `<div style="margin-top:14px;"><div class="section-label">Notatka ws. rozliczenia</div><div>${escapeHtml(c.notatka)}</div></div>` : ''}
     <div style="margin-top:16px;display:flex;gap:8px;">
       <button class="ghost" onclick="editCaseFromModal('${c.id}')">Edytuj sprawę</button>
@@ -2298,6 +2365,19 @@ function openCaseModal(id){
   document.getElementById('case-modal').classList.add('active');
 }
 
+function feeBlockHtml(c){
+  const total = Number(c.total)||0, paid = paidSum(c), rates = c.rates||[];
+  if(!total && !rates.length && !paid) return '';
+  const rem = Math.max(0, total-paid);
+  const rows = rates.map(r=>`<div class="activity-row"><div class="a-time">${formatDatePl(r.date)}</div><div style="flex:1">${fmtPLN(r.amount)}</div><span class="badge" style="${r.paid?'background:var(--sage-soft);color:var(--sage)':''}">${r.paid?'✓ opłacona':'oczekuje'}</span></div>`).join('');
+  return `<div style="margin-top:16px;"><div class="section-label">Wynagrodzenie${c.successFee?` · success fee ${c.successFee}%`:''}</div>
+    <div class="stat-row">
+      <div class="stat"><div class="l">Kwota</div><div class="v mono">${fmtPLN(total)}</div></div>
+      <div class="stat"><div class="l">Wpłacono</div><div class="v mono">${fmtPLN(paid)}</div></div>
+      <div class="stat"><div class="l">Pozostało</div><div class="v mono">${fmtPLN(rem)}</div></div>
+    </div>${rows}
+    <div style="font-size:12px;color:var(--ink-soft);margin-top:6px;">Wpłaty oznaczasz w apce Rozliczenia.</div></div>`;
+}
 let currentCaseId = null;
 const fmtPLN = n => (Number(n)||0).toLocaleString('pl-PL',{style:'currency',currency:'PLN'});
 function actRate(a, c){
@@ -2398,6 +2478,9 @@ function editCaseFromModal(id){
   document.getElementById('cf-notatka').value = c.notatka||'';
   document.getElementById('cf-status').value = c.status||'w_toku';
   document.getElementById('cf-stawka').value = (c.stawka===undefined||c.stawka===null) ? '' : c.stawka;
+  document.getElementById('cf-total').value = Number(c.total)>0 ? c.total : '';
+  document.getElementById('cf-successfee').value = (c.successFee===undefined||c.successFee===null) ? '' : c.successFee;
+  fillRateRows(c);
   document.getElementById('cf-extra').innerHTML = '';
   (c.pola||[]).forEach(p=>addExtraRow(p.k,p.v));
   switchView('sprawy');
