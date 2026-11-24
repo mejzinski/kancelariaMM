@@ -1,4 +1,4 @@
-const CACHE = 'kancelaria-v13';
+const CACHE = 'kancelaria-v14';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e=>{
@@ -19,7 +19,7 @@ self.addEventListener('fetch', e=>{
   if(new URL(e.request.url).origin !== self.location.origin) return;
   // network-first, żeby aktualizacje docierały od razu; offline z pamięci podręcznej
   e.respondWith(
-    fetch(e.request).then(res=>{
+    fetch(e.request,{cache:'no-store'}).then(res=>{
       const clone = res.clone();
       caches.open(CACHE).then(c=>c.put(e.request, clone));
       return res;
