@@ -693,8 +693,6 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
 
         <div class="section-label" style="margin:18px 0 10px;">Dane identyfikacyjne</div>
         <div class="grid2">
-          <div class="field cl-osoba"><label>PESEL</label><input id="cl-pesel" inputmode="numeric" maxlength="11" placeholder="11 cyfr"></div>
-          <div class="field cl-osoba"><label>Data urodzenia</label><input id="cl-urodzenia" type="date"></div>
           <div class="field cl-firma"><label>NIP</label><input id="cl-nip" placeholder="np. 777 000 00 00"></div>
           <div class="field cl-firma"><label>REGON</label><input id="cl-regon"></div>
           <div class="field cl-firma"><label>KRS / CEIDG</label><input id="cl-krs"></div>
@@ -742,7 +740,7 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
       </div>
 
       <div class="search-row">
-        <input type="text" id="client-search" placeholder="Szukaj klienta (nazwa, PESEL, NIP, telefon, e-mail)…" oninput="renderClients()">
+        <input type="text" id="client-search" placeholder="Szukaj klienta (nazwa, NIP, telefon, e-mail)…" oninput="renderClients()">
         <select id="client-status-filter" onchange="renderClients()" style="width:auto;">
           <option value="aktywny">Aktywni</option>
           <option value="archiwum">Archiwum</option>
@@ -771,16 +769,22 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
               <option value="rodzinna">Rodzinna</option>
               <option value="pracownicza">Pracownicza</option>
               <option value="gospodarcza">Gospodarcza</option>
+              <option value="ubezpieczeniowa">Ubezpieczeniowa</option>
               <option value="inna">Inna</option>
             </select>
           </div>
         </div>
         <div class="grid2">
           <div class="field"><label>Klient</label>
-            <select id="cf-klient-id" onchange="onCaseClientPick()" style="margin-bottom:6px;"><option value="">— wybierz z bazy klientów —</option></select>
-            <input id="cf-klient" placeholder="Imię i nazwisko / firma (lub wpisz ręcznie)">
+            <select id="cf-klient-id" onchange="onCaseClientPick()"><option value="">— wybierz z bazy klientów —</option></select>
+            <input id="cf-klient" type="hidden">
+            <div id="cf-klient-legacy" style="display:none;color:var(--ink-soft);font-size:12px;margin-top:6px;"></div>
           </div>
-          <div class="field"><label>Przeciwnik</label><input id="cf-przeciwnik" placeholder="Strona przeciwna"></div>
+          <div>
+            <div class="field"><label>Przeciwnik</label><input id="cf-przeciwnik" placeholder="np. ZUS Oddział w Poznaniu"></div>
+            <div class="field"><label>Adres przeciwnika</label><input id="cf-przeciwnik-adres" placeholder="Adres do korespondencji"></div>
+            <div class="field"><label>Pełnomocnik przeciwnika</label><textarea id="cf-pelnomocnik" rows="3" placeholder="Imię i nazwisko, kancelaria, adres, e-mail, telefon"></textarea></div>
+          </div>
         </div>
         <div class="grid2">
           <div class="field"><label>Wartość sprawy</label><input id="cf-wartosc" placeholder="np. 25 000 zł"></div>
@@ -788,13 +792,16 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
         </div>
         <div class="field"><label>Adres klienta</label><input id="cf-adres" placeholder="Adres korespondencyjny"></div>
         <div class="grid2">
-          <div class="field"><label>Status sprawy</label>
-            <select id="cf-status">
-              <option value="w_toku">W toku</option>
-              <option value="zawieszona">Zawieszona</option>
-              <option value="zakonczona">Zakończona</option>
-              <option value="archiwum">Archiwum</option>
-            </select>
+          <div>
+            <div class="field"><label>Status sprawy</label>
+              <select id="cf-status">
+                <option value="w_toku">W toku</option>
+                <option value="zawieszona">Zawieszona</option>
+                <option value="zakonczona">Zakończona</option>
+                <option value="archiwum">Archiwum</option>
+              </select>
+            </div>
+            <div class="field"><label>Etap sprawy</label><input id="cf-etap" placeholder="np. oczekiwanie na rozprawę 15.12"></div>
           </div>
           <div class="field"><label>Stawka godzinowa (zł/h)</label><input id="cf-stawka" type="number" min="0" step="1" placeholder="np. 300"></div>
         </div>
@@ -1154,7 +1161,7 @@ function setSyncStatus(connected){
 }
 
 /* Wspólna kolekcja „sprawy” z aplikacją Rozliczenia: tamta używa pól client/matter/category/note/archived. */
-const CAT_TO_RODZAJ = { gospodarcze:'gospodarcza', rodzinne:'rodzinna', karne:'karna', cywilne:'cywilna', pracownicze:'pracownicza', administracyjne:'administracyjna', inne:'inna' };
+const CAT_TO_RODZAJ = { gospodarcze:'gospodarcza', rodzinne:'rodzinna', karne:'karna', cywilne:'cywilna', pracownicze:'pracownicza', administracyjne:'administracyjna', ubezpieczeniowe:'ubezpieczeniowa', inne:'inna' };
 const RODZAJ_TO_CAT = Object.fromEntries(Object.entries(CAT_TO_RODZAJ).map(([k,v])=>[v,k]));
 function normCase(d){
   const c = {...d};
@@ -1683,12 +1690,12 @@ function runSearch(){
   const caseName = id => (sprawy.find(x=>x.id===id)||{}).nazwa || '';
   const groups = [];
 
-  const kl = klienci.filter(c=>match(gsHay([c.nazwa,c.telefon,c.email,c.nip,c.pesel,c.regon,c.krs,c.adres,c.adresKor,c.kontakt,c.notatka,...(c.pola||[]).map(p=>p.k+' '+p.v)])))
+  const kl = klienci.filter(c=>match(gsHay([c.nazwa,c.telefon,c.email,c.nip,c.regon,c.krs,c.adres,c.adresKor,c.kontakt,c.notatka,...(c.pola||[]).map(p=>p.k+' '+p.v)])))
     .sort((a,b)=>(a.nazwa||'').localeCompare(b.nazwa||'','pl'))
     .map(c=>({t:c.nazwa, st:[TYP_LABELS[c.typ||'osoba'],c.telefon,c.email].filter(Boolean).join(' · '), go:`gsOpen('klient','${c.id}')`}));
   groups.push(['Klienci',kl]);
 
-  const sp = sprawy.filter(c=>match(gsHay([c.nazwa,caseClientName(c),c.przeciwnik,c.wartosc,c.telefon,c.adres,c.notatka,...(c.pola||[]).map(p=>p.k+' '+p.v)])))
+  const sp = sprawy.filter(c=>match(gsHay([c.nazwa,caseClientName(c),c.przeciwnik,c.przeciwnikAdres,c.pelnomocnik,c.etap,c.wartosc,c.telefon,c.adres,c.notatka,...(c.pola||[]).map(p=>p.k+' '+p.v)])))
     .sort((a,b)=>(b.utworzono||0)-(a.utworzono||0))
     .map(c=>({t:c.nazwa, st:[caseClientName(c),(c.przeciwnik?'vs. '+c.przeciwnik:''),STATUS_LABELS[c.status||'w_toku']].filter(Boolean).join(' · '), go:`gsOpen('sprawa','${c.id}')`}));
   groups.push(['Sprawy',sp]);
@@ -1979,7 +1986,7 @@ function toggleClientType(){
   document.getElementById('cl-adres-label').textContent = t==='firma' ? 'Siedziba' : (t==='dzialalnosc' ? 'Adres zamieszkania / siedziba' : 'Adres zamieszkania');
 }
 const CL_FIELDS = {
-  'cl-typ':'typ','cl-status':'status','cl-nazwa':'nazwa','cl-pesel':'pesel','cl-urodzenia':'urodzenia',
+  'cl-typ':'typ','cl-status':'status','cl-nazwa':'nazwa',
   'cl-nip':'nip','cl-regon':'regon','cl-krs':'krs','cl-reprezentacja':'reprezentacja',
   'cl-adres':'adres','cl-adres-kor':'adresKor','cl-telefon':'telefon','cl-email':'email','cl-kontakt':'kontakt',
   'cl-forma':'forma','cl-wspolpraca':'wspolpraca','cl-pelnom-data':'pelnomData','cl-pelnom-zakres':'pelnomZakres',
@@ -2034,11 +2041,8 @@ function editClient(id){
 async function saveClient(){
   const nazwa = document.getElementById('cl-nazwa').value.trim();
   if(!nazwa){ alert('Podaj imię i nazwisko lub nazwę klienta.'); return; }
-  const pesel = document.getElementById('cl-pesel').value.replace(/\s/g,'');
-  if(pesel && !/^\d{11}$/.test(pesel)){ alert('PESEL powinien mieć 11 cyfr.'); return; }
   const payload = {};
   Object.entries(CL_FIELDS).forEach(([el,key])=>{ payload[key] = document.getElementById(el).value.trim(); });
-  payload.pesel = pesel;
   const st = document.getElementById('cl-stawka').value;
   payload.stawka = st === '' ? null : Number(st);
   payload.pola = readClientExtraRows();
@@ -2064,7 +2068,7 @@ function renderClients(){
     if(sf==='aktywny' && st!=='aktywny') return false;
     if(sf==='archiwum' && st!=='archiwum') return false;
     if(!q) return true;
-    return [c.nazwa,c.pesel,c.nip,c.telefon,c.email,c.kontakt].some(v=>(v||'').toLowerCase().replace(/\s/g,'').includes(q));
+    return [c.nazwa,c.nip,c.telefon,c.email,c.kontakt].some(v=>(v||'').toLowerCase().replace(/\s/g,'').includes(q));
   }).sort((a,b)=>(a.nazwa||'').localeCompare(b.nazwa||'','pl'));
   list.innerHTML = '';
   if(filtered.length===0){ list.innerHTML = '<div class="empty">Brak klientów spełniających kryteria</div>'; return; }
@@ -2109,7 +2113,6 @@ function openClientModal(id){
     <button class="ghost" onclick="editClient('${c.id}')">Edytuj</button>
     <button class="ghost" onclick="deleteClient('${c.id}')">Usuń</button>`;
   const ident = [];
-  if(t!=='firma'){ ident.push(f('PESEL',c.pesel)); ident.push(f('Data urodzenia', c.urodzenia?formatDatePl(c.urodzenia):'')); }
   if(t!=='osoba'){ ident.push(f('NIP',c.nip)); ident.push(f('REGON',c.regon)); ident.push(f('KRS / CEIDG',c.krs)); }
   if(t==='firma'){ ident.push(f('Reprezentacja',c.reprezentacja)); }
   document.getElementById('clm-details').innerHTML = `
@@ -2169,10 +2172,16 @@ function fillCaseClientSelect(){
       .map(c=>`<option value="${c.id}">${escapeHtml(c.nazwa)}</option>`).join('');
   sel.value = cur;
 }
+function showLegacyClient(name){
+  const el = document.getElementById('cf-klient-legacy');
+  el.textContent = name ? `Dotychczas wpisany klient (bez karty): ${name}. Wybierz kartę z listy, aby go powiązać.` : '';
+  el.style.display = name ? 'block' : 'none';
+}
 function onCaseClientPick(){
   const id = document.getElementById('cf-klient-id').value;
   const c = klienci.find(x=>x.id===id);
-  if(!c) return;
+  if(!c){ document.getElementById('cf-klient').value = document.getElementById('cf-klient-legacy').dataset.name || ''; return; }
+  showLegacyClient('');
   document.getElementById('cf-klient').value = c.nazwa || '';
   if(!document.getElementById('cf-telefon').value) document.getElementById('cf-telefon').value = c.telefon || '';
   if(!document.getElementById('cf-adres').value) document.getElementById('cf-adres').value = c.adresKor || c.adres || '';
@@ -2186,10 +2195,12 @@ let editingCaseId = null;
 function openCaseForm(){
   editingCaseId = null;
   document.getElementById('case-form-title').textContent = 'Nowa sprawa';
-  ['cf-nazwa','cf-klient','cf-przeciwnik','cf-wartosc','cf-telefon','cf-adres','cf-notatka'].forEach(id=>document.getElementById(id).value='');
+  ['cf-nazwa','cf-klient','cf-przeciwnik','cf-przeciwnik-adres','cf-pelnomocnik','cf-etap','cf-wartosc','cf-telefon','cf-adres','cf-notatka'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cf-rodzaj').value = 'cywilna';
   fillCaseClientSelect();
   document.getElementById('cf-klient-id').value = '';
+  document.getElementById('cf-klient-legacy').dataset.name = '';
+  showLegacyClient('');
   document.getElementById('cf-status').value = 'w_toku';
   document.getElementById('cf-stawka').value = '';
   document.getElementById('cf-total').value = '';
@@ -2262,6 +2273,9 @@ async function saveCase(){
     klient: document.getElementById('cf-klient').value.trim(),
     klientId: document.getElementById('cf-klient-id').value || null,
     przeciwnik: document.getElementById('cf-przeciwnik').value.trim(),
+    przeciwnikAdres: document.getElementById('cf-przeciwnik-adres').value.trim(),
+    pelnomocnik: document.getElementById('cf-pelnomocnik').value.trim(),
+    etap: document.getElementById('cf-etap').value.trim(),
     wartosc: document.getElementById('cf-wartosc').value.trim(),
     telefon: document.getElementById('cf-telefon').value.trim(),
     adres: document.getElementById('cf-adres').value.trim(),
@@ -2298,7 +2312,7 @@ async function saveCase(){
 }
 
 const STATUS_LABELS = {w_toku:'W toku',zawieszona:'Zawieszona',zakonczona:'Zakończona',archiwum:'Archiwum'};
-const RODZAJ_LABELS = {cywilna:'Cywilna',karna:'Karna',administracyjna:'Administracyjna',rodzinna:'Rodzinna',pracownicza:'Pracownicza',gospodarcza:'Gospodarcza',inna:'Inna'};
+const RODZAJ_LABELS = {cywilna:'Cywilna',karna:'Karna',administracyjna:'Administracyjna',rodzinna:'Rodzinna',pracownicza:'Pracownicza',gospodarcza:'Gospodarcza',ubezpieczeniowa:'Ubezpieczeniowa',inna:'Inna'};
 
 function renderCases(){
   const q = (document.getElementById('case-search').value || '').toLowerCase();
@@ -2310,7 +2324,7 @@ function renderCases(){
     if(sf==='zakonczona' && st!=='zakonczona') return false;
     if(sf==='archiwum' && st!=='archiwum') return false;
     if(!q) return true;
-    return (s.nazwa||'').toLowerCase().includes(q) || (s.klient||'').toLowerCase().includes(q) || (s.przeciwnik||'').toLowerCase().includes(q);
+    return (s.nazwa||'').toLowerCase().includes(q) || (s.klient||'').toLowerCase().includes(q) || (s.przeciwnik||'').toLowerCase().includes(q) || (s.pelnomocnik||'').toLowerCase().includes(q);
   }).sort((a,b)=>(b.utworzono||0)-(a.utworzono||0));
   list.innerHTML = '';
   if(filtered.length===0){ list.innerHTML = '<div class="empty">Brak spraw spełniających kryteria</div>'; return; }
@@ -2339,6 +2353,11 @@ function openCaseModal(id){
       <div><div class="section-label">Klient</div><div>${escapeHtml(c.klient||'—')}</div></div>
       <div><div class="section-label">Przeciwnik</div><div>${escapeHtml(c.przeciwnik||'—')}</div></div>
     </div>
+    ${(c.przeciwnikAdres||c.pelnomocnik) ? `<div class="grid2" style="margin-top:14px;">
+      <div><div class="section-label">Adres przeciwnika</div><div style="white-space:pre-wrap;">${escapeHtml(c.przeciwnikAdres||'—')}</div></div>
+      <div><div class="section-label">Pełnomocnik przeciwnika</div><div style="white-space:pre-wrap;">${escapeHtml(c.pelnomocnik||'—')}</div></div>
+    </div>` : ''}
+    ${c.etap ? `<div style="margin-top:14px;"><div class="section-label">Etap sprawy</div><div>${escapeHtml(c.etap)}</div></div>` : ''}
     <div class="grid2" style="margin-top:14px;">
       <div><div class="section-label">Telefon</div><div>${escapeHtml(c.telefon||'—')}</div></div>
       <div><div class="section-label">Adres</div><div>${escapeHtml(c.adres||'—')}</div></div>
@@ -2471,7 +2490,12 @@ function editCaseFromModal(id){
   fillCaseClientSelect();
   document.getElementById('cf-klient-id').value = c.klientId||'';
   document.getElementById('cf-klient').value = c.klient||'';
+  document.getElementById('cf-klient-legacy').dataset.name = (!c.klientId && c.klient) ? c.klient : '';
+  showLegacyClient((!c.klientId && c.klient) ? c.klient : '');
   document.getElementById('cf-przeciwnik').value = c.przeciwnik||'';
+  document.getElementById('cf-przeciwnik-adres').value = c.przeciwnikAdres||'';
+  document.getElementById('cf-pelnomocnik').value = c.pelnomocnik||'';
+  document.getElementById('cf-etap').value = c.etap||'';
   document.getElementById('cf-wartosc').value = c.wartosc||'';
   document.getElementById('cf-telefon').value = c.telefon||'';
   document.getElementById('cf-adres').value = c.adres||'';

@@ -1,4 +1,4 @@
-const CACHE = 'kancelaria-v11';
+const CACHE = 'kancelaria-v12';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e=>{
