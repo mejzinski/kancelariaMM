@@ -1201,8 +1201,8 @@ function normCase(d){
   c.klient = d.klient || d.client || '';
   c.rodzaj = d.rodzaj || CAT_TO_RODZAJ[d.category] || 'inna';
   c.notatka = d.notatka != null ? d.notatka : (d.note || '');
-  // „archived” (Rozliczenia) rozstrzyga o archiwum; pozostałe statusy z pola „status”
-  c.status = d.archived ? 'archiwum' : (d.status==='archiwum' ? 'w_toku' : (d.status || 'w_toku'));
+  // „archived” w Rozliczeniach oznacza tylko rozliczone wynagrodzenie; status sprawy jest niezależny (pole „status”)
+  c.status = d.status || 'w_toku';
   c.utworzono = d.utworzono || d.createdAt || 0;
   return c;
 }
@@ -2320,7 +2320,7 @@ async function saveCase(){
     matter: nazwa,
     category: RODZAJ_TO_CAT[document.getElementById('cf-rodzaj').value] || 'inne',
     note: document.getElementById('cf-notatka').value.trim(),
-    archived: document.getElementById('cf-status').value === 'archiwum',
+    archived: !!(editingCaseId && (sprawy.find(s=>s.id===editingCaseId)||{}).archived), // flaga Rozliczeń (wynagrodzenie rozliczone) — nie zmieniamy
     createdAt: editingCaseId ? ((sprawy.find(s=>s.id===editingCaseId)||{}).createdAt || Date.now()) : Date.now(),
     utworzono: editingCaseId ? (sprawy.find(s=>s.id===editingCaseId)||{}).utworzono || Date.now() : Date.now()
   };
@@ -2433,10 +2433,10 @@ function openCaseModal(id){
 
 function feeBlockHtml(c){
   const total = Number(c.total)||0, paid = paidSum(c), rates = c.rates||[];
-  if(!total && !rates.length && !paid) return '';
+  if(!total && !rates.length && !paid && !c.archived) return '';
   const rem = Math.max(0, total-paid);
   const rows = rates.map(r=>`<div class="activity-row"><div class="a-time">${formatDatePl(r.date)}</div><div style="flex:1">${fmtPLN(r.amount)}</div><span class="badge" style="${r.paid?'background:var(--sage-soft);color:var(--sage)':''}">${r.paid?'✓ opłacona':'oczekuje'}</span></div>`).join('');
-  return `<div style="margin:6px 0 16px;"><div class="section-label">Wynagrodzenie</div>
+  return `<div style="margin:6px 0 16px;"><div class="section-label">Wynagrodzenie${c.archived?' <span class="badge" style="background:var(--sage-soft);color:var(--sage);text-transform:none;letter-spacing:0;margin-left:8px;">✓ rozliczone (zarchiwizowane w Rozliczeniach)</span>':''}</div>
     <div class="stat-row">
       <div class="stat"><div class="l">Kwota${c.successFee?` · success fee ${c.successFee}%`:''}</div><div class="v mono">${fmtPLN(total)}</div></div>
       <div class="stat"><div class="l">Wpłacono</div><div class="v mono">${fmtPLN(paid)}</div></div>
