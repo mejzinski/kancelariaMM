@@ -367,6 +367,22 @@ label{
   padding:28px;
   box-shadow:0 20px 60px rgba(0,0,0,0.25);
 }
+.modal.wide{max-width:900px;}
+.ro-label{font-size:12.5px;font-weight:500;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+.ro{font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:7px;background:var(--paper-raised);color:var(--ink);min-height:44px;line-height:22px;white-space:pre-wrap;word-break:break-word;}
+.ro.empty-v{color:#8a8274;}
+.ro.tall{min-height:84px;}
+.ro-field{margin-bottom:14px;}
+button.btn-red,button.btn-green{
+  all:unset;cursor:pointer;color:#fff;padding:11px 20px;border-radius:9px;font-size:14px;font-weight:600;
+  display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;gap:6px;
+  box-shadow:0 2px 0 rgba(0,0,0,.25);
+}
+button.btn-red{background:#9b2c2c;}
+button.btn-red:hover{background:#7d2121;}
+button.btn-green{background:#2f6b4a;}
+button.btn-green:hover{background:#245439;}
+button.btn-red:active,button.btn-green:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.25);}
 .modal-close{
   float:right;
   all:unset;cursor:pointer;
@@ -1086,7 +1102,7 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
 
 <!-- Case detail modal -->
 <div class="modal-overlay" id="case-modal">
-  <div class="modal">
+  <div class="modal wide">
     <button class="modal-close" onclick="closeCaseModal()">×</button>
     <h2 id="cm-nazwa"></h2>
     <div class="modal-meta" id="cm-meta"></div>
@@ -2364,27 +2380,42 @@ function openCaseModal(id){
   if(!c) return;
   document.getElementById('cm-nazwa').textContent = c.nazwa;
   document.getElementById('cm-meta').textContent = '';
+  const ro = (label,val,cls)=>`<div class="ro-field"><div class="ro-label">${label}</div><div class="ro ${val?'':'empty-v'} ${cls||''}">${val?escapeHtml(val):'—'}</div></div>`;
   document.getElementById('cm-details').innerHTML = `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 20px;">
+      <button class="btn-red" onclick="editCaseFromModal('${c.id}')">✎ Edytuj sprawę</button>
+      <button class="btn-green" onclick="closeCaseModal();openTaskForm('${c.id}')">+ Dodaj zadanie do sprawy</button>
+    </div>
     <div class="grid2">
-      <div><div class="section-label">Klient</div><div>${escapeHtml(c.klient||'—')}</div></div>
-      <div><div class="section-label">Przeciwnik</div><div>${escapeHtml(c.przeciwnik||'—')}</div></div>
+      ${ro('Nazwa sprawy', c.nazwa)}
+      ${ro('Rodzaj sprawy', RODZAJ_LABELS[c.rodzaj]||c.rodzaj)}
     </div>
-    ${(c.przeciwnikAdres||c.pelnomocnik) ? `<div class="grid2" style="margin-top:14px;">
-      <div><div class="section-label">Adres przeciwnika</div><div style="white-space:pre-wrap;">${escapeHtml(c.przeciwnikAdres||'—')}</div></div>
-      <div><div class="section-label">Pełnomocnik przeciwnika</div><div style="white-space:pre-wrap;">${escapeHtml(c.pelnomocnik||'—')}</div></div>
-    </div>` : ''}
-    ${c.etap ? `<div style="margin-top:14px;"><div class="section-label">Etap sprawy</div><div>${escapeHtml(c.etap)}</div></div>` : ''}
-    <div class="grid2" style="margin-top:14px;">
-      <div><div class="section-label">Telefon</div><div>${escapeHtml(c.telefon||'—')}</div></div>
-      <div><div class="section-label">Adres</div><div>${escapeHtml(c.adres||'—')}</div></div>
+    <div class="grid2">
+      <div>
+        ${ro('Klient', c.klient)}
+        ${ro('Adres klienta', c.adres)}
+      </div>
+      <div>
+        ${ro('Przeciwnik', c.przeciwnik)}
+        ${ro('Adres przeciwnika', c.przeciwnikAdres)}
+        ${ro('Pełnomocnik przeciwnika', c.pelnomocnik, 'tall')}
+      </div>
     </div>
-    ${(c.pola||[]).length ? `<div style="margin-top:14px;" class="grid2">${c.pola.map(p=>`<div><div class="section-label">${escapeHtml(p.k||'—')}</div><div>${escapeHtml(p.v||'—')}</div></div>`).join('')}</div>` : ''}
+    <div class="grid2">
+      ${ro('Wartość sprawy', c.wartosc)}
+      ${ro('Telefon klienta', c.telefon)}
+    </div>
+    <div class="grid2">
+      <div>
+        ${ro('Status sprawy', STATUS_LABELS[c.status||'w_toku'])}
+        ${ro('Etap sprawy', c.etap)}
+      </div>
+      ${ro('Stawka godzinowa (zł/h)', c.stawka ? String(c.stawka) : '')}
+    </div>
     ${feeBlockHtml(c)}
-    ${c.notatka ? `<div style="margin-top:14px;"><div class="section-label">Notatka ws. rozliczenia</div><div>${escapeHtml(c.notatka)}</div></div>` : ''}
-    <div style="margin-top:16px;display:flex;gap:8px;">
-      <button class="ghost" onclick="editCaseFromModal('${c.id}')">Edytuj sprawę</button>
-      <button class="ghost" onclick="closeCaseModal();openTaskForm('${c.id}')">+ Zadanie do tej sprawy</button>
-    </div>`;
+    ${(c.pola||[]).length ? `<div class="grid2" style="margin-top:14px;">${c.pola.map(p=>ro(escapeHtml(p.k||'—'),p.v)).join('')}</div>` : ''}
+    ${ro('Notatka ws. rozliczenia', c.notatka, 'tall')}
+`;
 
   const tasks = zadania.filter(t=>t.sprawaId===id && t.status!=='zrobione');
   document.getElementById('cm-tasks').innerHTML = tasks.length
@@ -2405,9 +2436,9 @@ function feeBlockHtml(c){
   if(!total && !rates.length && !paid) return '';
   const rem = Math.max(0, total-paid);
   const rows = rates.map(r=>`<div class="activity-row"><div class="a-time">${formatDatePl(r.date)}</div><div style="flex:1">${fmtPLN(r.amount)}</div><span class="badge" style="${r.paid?'background:var(--sage-soft);color:var(--sage)':''}">${r.paid?'✓ opłacona':'oczekuje'}</span></div>`).join('');
-  return `<div style="margin-top:16px;"><div class="section-label">Wynagrodzenie${c.successFee?` · success fee ${c.successFee}%`:''}</div>
+  return `<div style="margin:6px 0 16px;"><div class="section-label">Wynagrodzenie</div>
     <div class="stat-row">
-      <div class="stat"><div class="l">Kwota</div><div class="v mono">${fmtPLN(total)}</div></div>
+      <div class="stat"><div class="l">Kwota${c.successFee?` · success fee ${c.successFee}%`:''}</div><div class="v mono">${fmtPLN(total)}</div></div>
       <div class="stat"><div class="l">Wpłacono</div><div class="v mono">${fmtPLN(paid)}</div></div>
       <div class="stat"><div class="l">Pozostało</div><div class="v mono">${fmtPLN(rem)}</div></div>
     </div>${rows}
