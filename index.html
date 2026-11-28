@@ -663,7 +663,6 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
     <section class="view active" id="view-zadania">
       <div class="view-header">
         <div><h1>Zadania</h1><div class="sub">Ważne i pilne, do napisania oraz drobne sprawy do zrobienia</div></div>
-        <button class="primary" onclick="openTaskForm()">+ Nowe zadanie</button>
       </div>
 
       <div class="panel form-panel" id="task-form-panel" style="display:none;">
@@ -1466,7 +1465,7 @@ function renderTaskGroups(){
       const v = inp.value.trim(); if(!v) return; inp.value='';
       await upsertDoc('zadania', uid(), {tresc:v, kategoria:kat, priorytet:'sredni', termin:null, sprawaId:null, status:'aktywne', utworzono:Date.now()});
     };
-    tile.querySelector('button').onclick = add;
+    tile.querySelector('.tile-add button').onclick = add;
     inp.addEventListener('keydown', e=>{ if(e.key==='Enter') add(); });
     container.appendChild(tile);
   });
