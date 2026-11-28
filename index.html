@@ -1112,6 +1112,26 @@ details.cl-det summary{cursor:pointer;font-weight:600;font-size:13px;margin-bott
   </div>
 </div>
 
+<div class="modal-overlay" id="urgent-modal">
+  <div class="modal" style="max-width:480px;">
+    <button class="modal-close" onclick="closeUrgent()">×</button>
+    <h2>Nowe zadanie — ważne / pilne</h2>
+    <div class="modal-meta">Wybierz sprawę, do której ma być przypisane.</div>
+    <div class="field"><label>Treść</label><textarea id="u-tresc" rows="3" placeholder="np. Złożyć wniosek o przywrócenie terminu"></textarea></div>
+    <div class="field"><label>Sprawa</label><select id="u-sprawa"></select></div>
+    <div class="grid2">
+      <div class="field"><label>Termin (opcjonalnie)</label><input type="date" id="u-termin"></div>
+      <div class="field"><label>Priorytet</label>
+        <select id="u-prio"><option value="wysoki" selected>Wysoki</option><option value="sredni">Średni</option><option value="niski">Niski</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="primary" onclick="saveUrgent()">Dodaj</button>
+      <button class="ghost" onclick="closeUrgent()">Anuluj</button>
+    </div>
+  </div>
+</div>
+
 <div id="timer-chip" onclick="stopTimer()">⏱ <span class="mono" id="timer-chip-time">00:00:00</span> · Stop</div>
 
 <!-- Case detail modal -->
@@ -1445,6 +1465,23 @@ async function deleteTask(id){
 
 function isoDate(d){ return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
 function isoPlusDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return isoDate(d); }
+function openUrgent(text){
+  document.getElementById('u-tresc').value = text || '';
+  document.getElementById('u-sprawa').innerHTML = caseOptionsHtml(sprawy.filter(isActiveCase), '— bez sprawy —');
+  document.getElementById('u-termin').value = '';
+  document.getElementById('u-prio').value = 'wysoki';
+  document.getElementById('urgent-modal').classList.add('active');
+  setTimeout(()=>document.getElementById(text ? 'u-sprawa' : 'u-tresc').focus(), 50);
+}
+function closeUrgent(){ document.getElementById('urgent-modal').classList.remove('active'); }
+async function saveUrgent(){
+  const tresc = document.getElementById('u-tresc').value.trim();
+  if(!tresc){ alert('Wpisz treść zadania.'); return; }
+  await upsertDoc('zadania', uid(), {tresc, kategoria:'wazne_pilne', priorytet:document.getElementById('u-prio').value,
+    termin: document.getElementById('u-termin').value || null, sprawaId: document.getElementById('u-sprawa').value || null,
+    status:'aktywne', utworzono:Date.now()});
+  closeUrgent();
+}
 function renderTaskGroups(){
   const container = document.getElementById('task-groups');
   const active = zadania.filter(t=>t.status!=='zrobione');
@@ -1462,6 +1499,7 @@ function renderTaskGroups(){
     else items.forEach(t=>body.appendChild(taskItemEl(t, kat==='drobne')));
     const inp = tile.querySelector('input');
     const add = async ()=>{
+      if(kat==='wazne_pilne'){ const t = inp.value.trim(); inp.value=''; openUrgent(t); return; }
       const v = inp.value.trim(); if(!v) return; inp.value='';
       await upsertDoc('zadania', uid(), {tresc:v, kategoria:kat, priorytet:'sredni', termin:null, sprawaId:null, status:'aktywne', utworzono:Date.now()});
     };
